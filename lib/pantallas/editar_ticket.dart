@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../modelos/producto.dart';
 import '../modelos/participante.dart';
 import '../modelos/gasto.dart';
@@ -21,12 +19,9 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
   final _controladorRestaurante = TextEditingController();
   final _controladorProducto = TextEditingController();
   final _controladorPrecio = TextEditingController();
-  final ImagePicker _imagePicker = ImagePicker();
 
   List<Producto> _productos = [];
   List<Participante> _participantes = [];
-  File? _imagenTicket;
-  bool _analizando = false;
 
   @override
   void dispose() {
@@ -48,74 +43,6 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Zona de foto GRANDE
-            GestureDetector(
-              onTap: _mostrarOpcionesImagen,
-              child: Container(
-                width: double.infinity,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.blue.shade300,
-                    width: 2,
-                  ),
-                ),
-                child: _imagenTicket != null
-                    ? Stack(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: Image.file(
-                              _imagenTicket!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          ),
-                          if (_analizando)
-                            Container(
-                              color: Colors.black54,
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              ),
-                            ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_a_photo,
-                            size: 56,
-                            color: Colors.blue.shade400,
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Sube la foto del ticket',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'La app analizará automáticamente',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
             // Nombre del restaurante
             TextField(
               controller: _controladorRestaurante,
@@ -128,7 +55,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                 prefixIcon: const Icon(Icons.restaurant),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             // Título Items
             const Text(
@@ -295,126 +222,6 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
             const SizedBox(height: 30),
           ],
         ),
-      ),
-    );
-  }
-
-  void _mostrarOpcionesImagen() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Tomar foto'),
-              onTap: () {
-                Navigator.pop(context);
-                _tomarFoto();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.image),
-              title: const Text('Seleccionar de galería'),
-              onTap: () {
-                Navigator.pop(context);
-                _seleccionarDelGaleria();
-              },
-            ),
-            if (_imagenTicket != null)
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Eliminar foto'),
-                textColor: Colors.red,
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    _imagenTicket = null;
-                    _productos.clear();
-                  });
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _tomarFoto() async {
-    try {
-      final XFile? foto =
-          await _imagePicker.pickImage(source: ImageSource.camera);
-      if (foto != null) {
-        setState(() {
-          _imagenTicket = File(foto.path);
-          _analizando = true;
-        });
-
-        // Simular análisis OCR
-        await Future.delayed(const Duration(seconds: 2));
-        _analizarTicket();
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
-  }
-
-  Future<void> _seleccionarDelGaleria() async {
-    try {
-      final XFile? foto = await _imagePicker.pickImage(
-        source: ImageSource.gallery,
-      );
-      if (foto != null) {
-        setState(() {
-          _imagenTicket = File(foto.path);
-          _analizando = true;
-        });
-
-        // Simular análisis OCR
-        await Future.delayed(const Duration(seconds: 2));
-        _analizarTicket();
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
-  }
-
-  void _analizarTicket() {
-    // Simulación de OCR - En una app real usarías un servicio como Google Vision
-    final productosDetectados = [
-      {'nombre': 'Hamburguesa Clásica', 'precio': 12.50},
-      {'nombre': 'Papas Fritas', 'precio': 5.00},
-      {'nombre': 'Bebida Grande', 'precio': 3.50},
-      {'nombre': 'Postre', 'precio': 7.00},
-    ];
-
-    setState(() {
-      _productos.clear();
-      for (var item in productosDetectados) {
-        _productos.add(
-          Producto(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            nombre: item['nombre'] as String,
-            precio: item['precio'] as double,
-          ),
-        );
-      }
-      _analizando = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          '✓ Ticket analizado: 4 productos detectados',
-        ),
-        duration: Duration(seconds: 2),
-        backgroundColor: Colors.green,
       ),
     );
   }

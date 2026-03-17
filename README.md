@@ -1,53 +1,72 @@
-# 💳 Split Bill App
+# 💳 Aplicación para Dividir Gastos
 
-Una aplicación Flutter para dividir cuentas de restaurantes de manera simple y eficiente. Escanea tickets, divide la cuenta entre comensales y comparte el comprobante por WhatsApp o mensaje.
+Una aplicación Flutter para dividir cuentas de restaurantes de manera simple y eficiente. Ingresa los productos, asigna participantes y divide la cuenta automáticamente.
 
 ## 🎯 Características Principales
 
 ### 📱 Pantallas
 
-1. **Pantalla de Inicio** - Menú principal con acceso a todas las funcionalidades
-2. **Escanear Ticket** - Captura tickets de restaurantes usando la cámara o galería
-3. **Dividir Cuenta** - Distribuye la cuenta entre los comensales de forma rápida
-4. **Compartir Comprobante** - Envía el desglose por WhatsApp, SMS o correo
-5. **Historial** - Visualiza todas tus transacciones anteriores
-6. **Tendencias** - Analiza tus gastos y patrones de consumo
+1. **Inicio** - Dashboard principal con resumen de gastos
+2. **Editar Ticket** - Agrega restaurante, productos y participantes
+3. **Dividir Gastos** - Selecciona modo de división (equitativo o proporcional)
+4. **Historial** - Visualiza gastos guardados con opción de favoritos
+5. **Perfil** - Estadísticas y ranking de restaurantes
 
 ### ✨ Funcionalidades
 
-- **Escaneo de Tickets**: Captura imágenes de tickets y extrae automáticamente los artículos (simulado)
-- **Entrada Manual**: Agrega artículos manualmente si el escaneo no extrae correctamente
-- **División Flexible**: 
-  - Selecciona qué artículos corresponden a cada persona
-  - Distribuye propinas proporcionalmente
-  - Añade nuevos comensales dinámicamente
-- **Compartir Comprobante**:
-  - WhatsApp directo
-  - SMS/Email
-  - Compartir genérico en otras apps
-- **Historial**: Guarda y revisa todas tus divisiones anteriores
-- **Análisis de Tendencias**:
-  - Gasto total por persona
-  - Restaurante más visitado
-  - Estadísticas mensuales
+- **Ingreso de productos**: Agrega artículos con precio y cantidad
+- **División flexible**: 
+  - Equitativo: divide el total entre todos
+  - Proporcional: divide según qué consumió cada persona
+- **Sistema de favoritos**: Marca restaurantes favoritos
+- **Compartir desglose**: Envía por WhatsApp, Bizum o mensaje genérico
+- **Historial persistente**: Guarda todos tus gastos
+- **Estadísticas**: Análisis de gastos por restaurante y tiempo
 
 ## 📋 Estructura del Proyecto
 
 ```
 lib/
-├── main.dart                 # Punto de entrada de la app
-├── models/
-│   ├── meal_item.dart       # Modelo de artículos
-│   ├── split_transaction.dart # Modelo de transacciones
-│   └── history.dart         # Datos y lógica del historial
-├── screens/
-│   ├── home_screen.dart     # Pantalla de inicio
-│   ├── scan_screen.dart     # Escaneo de tickets
-│   ├── split_screen.dart    # División de cuenta
-│   ├── share_screen.dart    # Compartir comprobante
-│   ├── history_screen.dart  # Historial de transacciones
-│   └── trends_screen.dart   # Análisis de tendencias
-├── services/
+├── main.dart                 # Punto de entrada
+├── modelos/
+│   ├── producto.dart        # Modelo de productos
+│   ├── participante.dart    # Modelo de participantes
+│   ├── gasto.dart           # Modelo de transacción
+│   └── historial.dart       # Servicio de persistencia
+├── pantallas/
+│   ├── inicio.dart          # Home screen
+│   ├── editar_ticket.dart   # Formulario de ingreso
+│   ├── dividir_gastos.dart  # División de cuenta
+│   ├── historial.dart       # Historial y favoritos
+│   └── perfil.dart          # Estadísticas
+├── servicios/
+│   └── division.dart        # Lógica de cálculo de deudas
+└── assets/                   # Imágenes y recursos
+```
+
+## 🛠️ Tecnologías
+
+- **Framework**: Flutter 3.0+
+- **Lenguaje**: Dart 3.0+
+- **Diseño**: Material Design 3
+- **Persistencia**: Memoria en aplicación (Singleton pattern)
+
+## 📦 Dependencias
+
+- `image_picker`: Para captura de imágenes
+- `share_plus`: Para compartir contenido
+- `url_launcher`: Para enlaces
+
+## 🚀 Cómo ejecutar
+
+```bash
+flutter pub get
+flutter run
+```
+
+## 📝 Licencia
+
+MIT License
 │   ├── split_service.dart   # Lógica de división
 │   ├── share_service.dart   # Compartir y WhatsApp
 │   └── history_service.dart # Gestión del historial
