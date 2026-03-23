@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../modelos/gasto.dart';
 import '../modelos/producto.dart';
 import '../modelos/historial.dart';
+import 'resumen_gasto.dart';
 
 class PantallaDividirGastos extends StatefulWidget {
   final Gasto gasto;
@@ -123,7 +124,7 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _guardarGasto(context),
+                onPressed: () => _irAResumen(context),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.blue.shade600,
@@ -348,6 +349,23 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
           },
         );
       },
+    );
+  }
+
+  void _irAResumen(BuildContext context) {
+    widget.gasto.modo = _modoSeleccionado;
+    widget.gasto.calcularDeudas();
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PantallaResumenGasto(
+          gasto: widget.gasto,
+          onVolver: () {
+            // Retroceder a dividir_gastos
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
     );
   }
 

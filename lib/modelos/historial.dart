@@ -71,4 +71,6 @@ class ServicioHistorial {
     }
     return stats;
   }
+
+  void removerFavorito(String restaurante) {}
 }

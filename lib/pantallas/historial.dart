@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../modelos/historial.dart';
+import 'resumen_gasto.dart';
 
 class PantallaHistorial extends StatefulWidget {
   const PantallaHistorial({Key? key}) : super(key: key);
@@ -81,59 +82,119 @@ class _PantallaHistorialState extends State<PantallaHistorial>
       itemCount: gastos.length,
       itemBuilder: (context, index) {
         final gasto = gastos[gastos.length - 1 - index]; // Orden inverso
+        final esFavorito = _historial.obtenerFavoritos().contains(gasto.restaurante);
 
-        return Card(
+        return Container(
           margin: const EdgeInsets.only(bottom: 12),
-          child: ExpansionTile(
-            title: Text(gasto.restaurante),
-            subtitle: Text(
-              '${gasto.fecha.day}/${gasto.fecha.month}/${gasto.fecha.year} · ${gasto.totalGasto.toStringAsFixed(2)}€',
-            ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!, width: 1),
+          ),
+          child: Column(
             children: [
+              // Header con info del gasto
               Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.all(14),
+                child: Row(
                   children: [
-                    const Text(
-                      'Productos:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            gasto.restaurante,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${gasto.fecha.day}/${gasto.fecha.month}/${gasto.fecha.year}',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    ...gasto.productos.map((p) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(p.nombre),
-                            Text('${p.precioTotal.toStringAsFixed(2)}€'),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Participantes:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    Text(
+                      '${gasto.totalGasto.toStringAsFixed(2)}€',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade600,
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    ...gasto.participantes.map((p) {
-                      final deuda = gasto.deudas[p.id] ?? 0;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(p.nombre),
-                            Text('${deuda.toStringAsFixed(2)}€'),
-                          ],
-                        ),
-                      );
-                    }).toList(),
                   ],
                 ),
+              ),
+              const Divider(height: 1),
+              // Botones de acción
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PantallaResumenGasto(
+                              gasto: gasto,
+                              onVolver: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.receipt_long),
+                      label: const Text('Ver'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.blue,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        _historial.eliminarGasto(gasto.id);
+                        setState(() {});
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Gasto eliminado'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Eliminar'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.red,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        if (esFavorito) {
+                          _historial.removerFavorito(gasto.restaurante);
+                        } else {
+                          _historial.agregarFavorito(gasto.restaurante);
+                        }
+                        setState(() {});
+                      },
+                      icon: Icon(
+                        esFavorito ? Icons.favorite : Icons.favorite_border,
+                      ),
+                      label: Text(esFavorito ? '★' : '☆'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: esFavorito ? Colors.red : Colors.grey,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
