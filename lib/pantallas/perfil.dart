@@ -10,11 +10,23 @@ class PantallaPerfil extends StatefulWidget {
 
 class _PantallaPerfilState extends State<PantallaPerfil> {
   late ServicioHistorial _historial;
+  late TextEditingController _nombreController;
+  late TextEditingController _emailController;
+  bool _enEdicion = false;
 
   @override
   void initState() {
     super.initState();
     _historial = ServicioHistorial();
+    _nombreController = TextEditingController(text: 'Usuario');
+    _emailController = TextEditingController(text: 'usuario@ejemplo.com');
+  }
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _emailController.dispose();
+    super.dispose();
   }
 
   @override
@@ -27,13 +39,34 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
       appBar: AppBar(
         title: const Text('Perfil'),
         elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: Icon(_enEdicion ? Icons.done : Icons.edit),
+            onPressed: () {
+              setState(() {
+                _enEdicion = !_enEdicion;
+              });
+              if (!_enEdicion) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('✓ Perfil actualizado'),
+                    duration: Duration(seconds: 2),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Encabezado del perfil
+            // Encabezado del perfil - Editable
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -62,22 +95,55 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Mi Perfil',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  if (_enEdicion)
+                    TextField(
+                      controller: _nombreController,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Tu nombre',
+                        hintStyle: const TextStyle(color: Colors.white70),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                    )
+                  else
+                    Text(
+                      _nombreController.text,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Gestiona tus gastos compartidos',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
+                  if (_enEdicion)
+                    TextField(
+                      controller: _emailController,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Tu email',
+                        hintStyle: const TextStyle(color: Colors.white54),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                      ),
+                    )
+                  else
+                    Text(
+                      _emailController.text,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -232,79 +298,8 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                 },
               ),
             const SizedBox(height: 24),
-
-            // Opciones de ajustes
-            const Text(
-              'Ajustes',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.info),
-                title: const Text('Acerca de'),
-                onTap: _mostrarAcercaDe,
-              ),
-            ),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.delete_sweep),
-                title: const Text('Limpiar historial'),
-                textColor: Colors.red,
-                onTap: _limpiarHistorial,
-              ),
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _mostrarAcercaDe() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Acerca de'),
-        content: const Text(
-          'Dividir Gastos v1.0\n\n'
-          'Aplicación para dividir gastos en restaurantes de forma equitativa o proporcional.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _limpiarHistorial() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Limpiar historial'),
-        content: const Text('¿Estás seguro de que deseas eliminar todo el historial?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              // Aquí iría la lógica para limpiar el historial
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Historial eliminado')),
-              );
-            },
-            child: const Text('Eliminar'),
-          ),
-        ],
       ),
     );
   }

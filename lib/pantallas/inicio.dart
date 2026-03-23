@@ -42,7 +42,13 @@ class _PantallaInicioState extends State<PantallaInicio> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const PantallaAjustes(),
+                ),
+              );
+            },
           ),
         ],
       ),
