@@ -1,103 +1,26 @@
-# 💳 Aplicación para Dividir Gastos
+# Split Bill App
 
-Una aplicación Flutter para dividir cuentas de restaurantes de manera simple y eficiente. Ingresa los productos, asigna participantes y divide la cuenta automáticamente.
+Aplicación para dividir cuentas de restaurantes. Ingresa productos, asigna participantes y divide automáticamente.
 
-## 🎯 Características Principales
+## Características
 
-### 📱 Pantallas
+Ingreso de productos con precio y cantidad. División equitativa o proporcional según consumo. Sistema de favoritos para restaurantes. Compartir desglose por WhatsApp, Bizum o mensaje. Historial de todos los gastos. Estadísticas de gasto por restaurante.
 
-1. **Inicio** - Dashboard principal con resumen de gastos
-2. **Editar Ticket** - Agrega restaurante, productos y participantes
-3. **Dividir Gastos** - Selecciona modo de división (equitativo o proporcional)
-4. **Historial** - Visualiza gastos guardados con opción de favoritos
-5. **Perfil** - Estadísticas y ranking de restaurantes
+## Estructura
 
-### ✨ Funcionalidades
+lib/main.dart es el punto de entrada. lib/pantallas/ tiene la interfaz (inicio, editar_ticket, dividir_gastos, historial, perfil, ajustes). lib/modelos/ tiene la lógica (gasto, participante, historial). lib/servicios/ maneja la división de cuentas y compartir contenido.
 
-- **Ingreso de productos**: Agrega artículos con precio y cantidad
-- **División flexible**: 
-  - Equitativo: divide el total entre todos
-  - Proporcional: divide según qué consumió cada persona
-- **Sistema de favoritos**: Marca restaurantes favoritos
-- **Compartir desglose**: Envía por WhatsApp, Bizum o mensaje genérico
-- **Historial persistente**: Guarda todos tus gastos
-- **Estadísticas**: Análisis de gastos por restaurante y tiempo
+## Tecnologías
 
-## 📋 Estructura del Proyecto
+Flutter 3.0+, Dart 3.0+, Material Design. Usa image_picker para fotos, share_plus para compartir, url_launcher para enlaces.
 
-```
-lib/
-├── main.dart                 # Punto de entrada
-├── modelos/
-│   ├── producto.dart        # Modelo de productos
-│   ├── participante.dart    # Modelo de participantes
-│   ├── gasto.dart           # Modelo de transacción
-│   └── historial.dart       # Servicio de persistencia
-├── pantallas/
-│   ├── inicio.dart          # Home screen
-│   ├── editar_ticket.dart   # Formulario de ingreso
-│   ├── dividir_gastos.dart  # División de cuenta
-│   ├── historial.dart       # Historial y favoritos
-│   └── perfil.dart          # Estadísticas
-├── servicios/
-│   └── division.dart        # Lógica de cálculo de deudas
-└── assets/                   # Imágenes y recursos
-```
+## Instalar y Ejecutar
 
-## 🛠️ Tecnologías
+Necesitas Flutter 3.0+ y Dart 3.0+. Clona el proyecto, ejecuta flutter pub get, luego flutter run.
 
-- **Framework**: Flutter 3.0+
-- **Lenguaje**: Dart 3.0+
-- **Diseño**: Material Design 3
-- **Persistencia**: Memoria en aplicación (Singleton pattern)
+## Documentación
 
-## 📦 Dependencias
-
-- `image_picker`: Para captura de imágenes
-- `share_plus`: Para compartir contenido
-- `url_launcher`: Para enlaces
-
-## 🚀 Cómo ejecutar
-
-```bash
-flutter pub get
-flutter run
-```
-
-## 📝 Licencia
-
-MIT License
-│   ├── split_service.dart   # Lógica de división
-│   ├── share_service.dart   # Compartir y WhatsApp
-│   └── history_service.dart # Gestión del historial
-└── widgets/
-    ├── custom_app_bar.dart       # AppBar personalizado
-    ├── meal_item_card.dart       # Card para artículos
-    └── person_selector.dart      # Selector de personas
-```
-
-## 🚀 Instalación y Ejecución
-
-### Requisitos
-
-- Flutter 3.0+
-- Dart 3.0+
-
-### Pasos
-
-1. **Clonar o descargar el proyecto:**
-   ```bash
-   cd TrabajoFinal
-   ```
-
-2. **Instalar dependencias:**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Ejecutar la aplicación:**
-   ```bash
-   flutter run
+Ve a PROCEDIMIENTOS.md para desarrollo, pruebas y despliegue. Ve a EJECUCION.md para instalación, protocolos de trabajo y control de versiones.
    ```
 
 ## 📦 Dependencias
