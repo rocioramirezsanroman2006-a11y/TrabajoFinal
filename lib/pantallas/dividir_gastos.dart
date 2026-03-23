@@ -25,7 +25,20 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
   void initState() {
     super.initState();
     _modoSeleccionado = widget.gasto.modo;
+    _inicializarProductos();
     widget.gasto.calcularDeudas();
+  }
+
+  void _inicializarProductos() {
+    // Si es modo equitativo, asegurarse que todos los productos tienen todos los participantes
+    if (_modoSeleccionado == ModoGasto.equitativo) {
+      for (var producto in widget.gasto.productos) {
+        if (producto.participantesSeleccionados.isEmpty) {
+          producto.participantesSeleccionados =
+              widget.gasto.participantes.map((p) => p.id).toList();
+        }
+      }
+    }
   }
 
   @override
@@ -271,6 +284,16 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
             onSelectionChanged: (Set<ModoGasto> newSelection) {
               setState(() {
                 _modoSeleccionado = newSelection.first;
+                
+                // Si cambiamos a equitativo, asignar todos los participantes a todos los productos
+                if (_modoSeleccionado == ModoGasto.equitativo) {
+                  for (var producto in widget.gasto.productos) {
+                    producto.participantesSeleccionados =
+                        widget.gasto.participantes.map((p) => p.id).toList();
+                  }
+                }
+                
+                widget.gasto.modo = _modoSeleccionado;
                 widget.gasto.calcularDeudas();
               });
             },

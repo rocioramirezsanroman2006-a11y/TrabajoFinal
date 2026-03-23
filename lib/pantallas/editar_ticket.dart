@@ -415,11 +415,22 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
       return;
     }
 
+    // En modo equitativo, todos los productos se asignan a todos los participantes
+    final productosConParticipantes = _productos.map((producto) {
+      return Producto(
+        id: producto.id,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        cantidad: producto.cantidad,
+        participantesSeleccionados: _participantes.map((p) => p.id).toList(),
+      );
+    }).toList();
+
     final gasto = Gasto(
       id: DateTime.now().toString(),
       restaurante: _controladorRestaurante.text,
       fecha: DateTime.now(),
-      productos: _productos,
+      productos: productosConParticipantes,
       participantes: _participantes,
       modo: ModoGasto.equitativo,
     );
