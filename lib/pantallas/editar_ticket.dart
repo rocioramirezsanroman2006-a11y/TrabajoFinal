@@ -37,172 +37,258 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
       appBar: AppBar(
         title: const Text('Editar Ticket'),
         elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Nombre del restaurante
-            TextField(
-              controller: _controladorRestaurante,
-              decoration: InputDecoration(
-                labelText: 'Restaurante',
-                hintText: 'Ej: La Paella de María',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.restaurant),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Título Items
-            const Text(
-              'Elementos del Ticket',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Formulario agregar producto
-            TextField(
-              controller: _controladorProducto,
-              decoration: InputDecoration(
-                labelText: 'Producto',
-                hintText: 'Ej: Paella mixta',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.fastfood),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            TextField(
-              controller: _controladorPrecio,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: 'Precio',
-                hintText: '0.00€',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.euro),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _agregarProducto,
-                icon: const Icon(Icons.add),
-                label: const Text('Agregar Producto'),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Lista de productos
-            if (_productos.isNotEmpty)
-              Column(
+      body: Column(
+        children: [
+          // Contenido scrolleable
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 20),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Productos agregados',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  // Nombre del restaurante
+                  TextField(
+                    controller: _controladorRestaurante,
+                    decoration: InputDecoration(
+                      labelText: 'Restaurante',
+                      hintText: 'Ej: La Paella de María',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: const Icon(Icons.restaurant),
+                    ),
                   ),
-                  const SizedBox(height: 10),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _productos.length,
-                    itemBuilder: (context, index) {
-                      final producto = _productos[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: const Icon(Icons.fastfood, color: Colors.orange),
-                          title: Text(producto.nombre),
-                          subtitle: Text('${producto.precio.toStringAsFixed(2)}€'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.close),
-                            color: Colors.red,
-                            onPressed: () => _eliminarProducto(index),
+                  const SizedBox(height: 28),
+
+                  // Título Items
+                  const Text(
+                    'Elementos del Ticket',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Formulario agregar producto
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _controladorProducto,
+                          decoration: InputDecoration(
+                            labelText: 'Producto',
+                            hintText: 'Ej: Paella mixta',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                           ),
                         ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
-
-            // Título Participantes
-            const Text(
-              'Participantes',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Botón agregar participante
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _mostrarDialogoAgregarParticipante,
-                icon: const Icon(Icons.person_add),
-                label: const Text('Agregar Participante'),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Lista de participantes
-            if (_participantes.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Participantes agregados',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  const SizedBox(height: 10),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _participantes.length,
-                    itemBuilder: (context, index) {
-                      final participante = _participantes[index];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          leading: const Icon(Icons.person, color: Colors.blue),
-                          title: Text(participante.nombre),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.close),
-                            color: Colors.red,
-                            onPressed: () => _eliminarParticipante(index),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: _controladorPrecio,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Precio',
+                            hintText: '0.00€',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
                           ),
                         ),
-                      );
-                    },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Botón agregar producto
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _agregarProducto,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Añadir Plato'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.blue.shade400,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
+
+                  // Lista de productos
+                  if (_productos.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Platos agregados',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _productos.length,
+                          itemBuilder: (context, index) {
+                            final producto = _productos[index];
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: Colors.grey[300]!,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          producto.nombre,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${producto.precio.toStringAsFixed(2)}€',
+                                          style: TextStyle(
+                                            color: Colors.blue.shade600,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.close),
+                                    color: Colors.red,
+                                    onPressed: () =>
+                                        _eliminarProducto(index),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+
+                  // Título Participantes
+                  const Text(
+                    'Participantes',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Botón agregar participante
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _mostrarDialogoAgregarParticipante,
+                      icon: const Icon(Icons.person_add),
+                      label: const Text('+ Añadir participante'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.blue.shade400,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: Colors.blue.shade400,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Lista de participantes en chips
+                  if (_participantes.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _participantes.asMap().entries.map((e) {
+                            final index = e.key;
+                            final participante = e.value;
+                            return Chip(
+                              avatar: CircleAvatar(
+                                backgroundColor: _getColorForIndex(index),
+                                child: Text(
+                                  participante.nombre[0].toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              label: Text(participante.nombre),
+                              onDeleted: () =>
+                                  _eliminarParticipante(index),
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                 ],
               ),
-
-            // Botón continuar DESTACADO
-            SizedBox(
+            ),
+          ),
+          // Botón continuar pegado al fondo
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+            color: Colors.white,
+            child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _crearGasto,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.blue.shade600,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -212,16 +298,15 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                 child: const Text(
                   'Continuar',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 30),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -340,5 +425,19 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
     );
 
     widget.onGastoCreado(gasto);
+  }
+
+  Color _getColorForIndex(int index) {
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.red,
+      Colors.purple,
+      Colors.pink,
+      Colors.teal,
+      Colors.indigo,
+    ];
+    return colors[index % colors.length];
   }
 }
