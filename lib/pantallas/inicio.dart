@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../modelos/historial.dart';
 import '../modelos/gasto.dart';
+import 'ajustes.dart';
 
 class PantallaInicio extends StatefulWidget {
   final Function(Gasto)? onNuevoGasto;
