@@ -179,7 +179,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
                     child: TextButton.icon(
                       onPressed: () {
                         if (esFavorito) {
-                          _historial.removerFavorito(gasto.restaurante);
+                          _historial.eliminarFavorito(gasto.restaurante);
                         } else {
                           _historial.agregarFavorito(gasto.restaurante);
                         }

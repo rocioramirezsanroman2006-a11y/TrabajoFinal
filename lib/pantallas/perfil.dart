@@ -286,11 +286,24 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                         ),
                       ),
                       title: Text(restaurante),
-                      trailing: Text(
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          _historial.eliminarFavorito(restaurante);
+                          setState(() {});
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('$restaurante eliminado de favoritos'),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      ),
+                      subtitle: Text(
                         '${gastado.toStringAsFixed(2)}€',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 14,
                         ),
                       ),
                     ),

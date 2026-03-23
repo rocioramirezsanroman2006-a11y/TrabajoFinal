@@ -31,9 +31,6 @@ class ServicioHistorial {
 
   void agregarGasto(Gasto gasto) {
     _gastos.insert(0, gasto); // Insertar al inicio para orden descendente
-    if (!_favoritos.contains(gasto.restaurante)) {
-      _favoritos.add(gasto.restaurante);
-    }
   }
 
   void eliminarGasto(String id) {
@@ -71,6 +68,4 @@ class ServicioHistorial {
     }
     return stats;
   }
-
-  void removerFavorito(String restaurante) {}
 }
