@@ -21,7 +21,8 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
   @override
   void initState() {
     super.initState();
-    // Guardar el gasto en el historial cuando se abre la pantalla de resumen
+    // Nos aseguramos que las deudas estén calculadas antes de guardar
+    widget.gasto.calcularDeudas();
     final historial = ServicioHistorial();
     historial.agregarGasto(widget.gasto);
   }
@@ -47,17 +48,13 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Restaurante
               Text(
                 widget.gasto.restaurante,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
-                'Total: ${widget.gasto.totalGasto.toStringAsFixed(2)}€',
+                'Total Ticket: ${widget.gasto.totalGasto.toStringAsFixed(2)}€',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -66,22 +63,16 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
               ),
               const SizedBox(height: 24),
 
-              // Qué consumió cada uno
               const Text(
-                'Qué se comió',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                'Desglose por participante',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
 
               ...widget.gasto.participantes.map((participante) {
                 final productos = productosPorParticipante[participante.id] ?? [];
-                final totalParticipante = productos.fold<double>(
-                  0,
-                  (sum, p) => sum + (p.precioTotal / p.participantesSeleccionados.length),
-                );
+                // CORRECCIÓN: Usamos la deuda ya calculada en el modelo Gasto
+                final totalDeudaParticipante = widget.gasto.deudas[participante.id] ?? 0.0;
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
@@ -103,11 +94,7 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
                             ),
                             child: Text(
                               participante.nombre[0].toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -117,16 +104,13 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
                               children: [
                                 Text(
                                   participante.nombre,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                 ),
                                 Text(
-                                  'Total: ${totalParticipante.toStringAsFixed(2)}€',
+                                  'Debe pagar: ${totalDeudaParticipante.toStringAsFixed(2)}€',
                                   style: TextStyle(
-                                    color: Colors.blue.shade600,
-                                    fontWeight: FontWeight.w600,
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.bold,
                                     fontSize: 15,
                                   ),
                                 ),
@@ -138,36 +122,38 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
                       if (productos.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         const Divider(),
-                        const SizedBox(height: 8),
                         const Text(
-                          'Consumió:',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey,
-                          ),
+                          'Detalle de consumo:',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
                         ),
                         const SizedBox(height: 8),
                         ...productos.map((producto) {
-                          final precioPersona = producto.precioTotal /
-                              producto.participantesSeleccionados.length;
+                          // CORRECCIÓN: Cálculo proporcional para el desglose visual
+                          double precioItem;
+                          if (widget.gasto.modo == ModoGasto.proporcional) {
+                            double racionesP = producto.asignacionesProporcionales[participante.id] ?? 0;
+                            double totalR = producto.totalAsignado;
+                            precioItem = totalR > 0 ? (racionesP / totalR) * producto.precioTotal : 0;
+                          } else {
+                            precioItem = producto.precioTotal / producto.participantesSeleccionados.length;
+                          }
+
+                          if (precioItem <= 0) return const SizedBox.shrink();
+
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
+                            padding: const EdgeInsets.only(bottom: 4),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
                                   child: Text(
-                                    '• ${producto.nombre}',
-                                    style: const TextStyle(fontSize: 14),
+                                    '• ${producto.nombre} ${widget.gasto.modo == ModoGasto.proporcional ? "(${producto.asignacionesProporcionales[participante.id]?.toString().replaceAll(".0", "")} ración/es)" : ""}',
+                                    style: const TextStyle(fontSize: 13),
                                   ),
                                 ),
                                 Text(
-                                  '${precioPersona.toStringAsFixed(2)}€',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
+                                  '${precioItem.toStringAsFixed(2)}€',
+                                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                                 ),
                               ],
                             ),
@@ -181,7 +167,6 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
 
               const SizedBox(height: 24),
 
-              // Botón Compartir WhatsApp
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -191,29 +176,19 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Colors.green.shade600,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
 
-              // Botón Guardar e Ir al Historial
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // El gasto ya se guardó en initState
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('✓ Gasto guardado en historial'),
-                        duration: Duration(seconds: 2),
-                        backgroundColor: Colors.green,
-                      ),
+                      const SnackBar(content: Text('✓ Gasto guardado correctamente'), backgroundColor: Colors.green),
                     );
-
                     Future.delayed(const Duration(seconds: 1), () {
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     });
@@ -221,19 +196,9 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Colors.blue.shade600,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 4,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text(
-                    'Guardar Gasto',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: const Text('Finalizar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
               const SizedBox(height: 20),
@@ -245,51 +210,48 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
   }
 
   Future<void> _compartirPorWhatsApp() async {
-    final productosPorParticipante =
-        widget.gasto.obtenerProductosPorParticipante();
+    final productosPorParticipante = widget.gasto.obtenerProductosPorParticipante();
 
-    String mensaje = '🍽️ *${widget.gasto.restaurante}*\n\n';
-    mensaje += '💰 *Total: ${widget.gasto.totalGasto.toStringAsFixed(2)}€*\n\n';
+    String mensaje = '🍽️ *${widget.gasto.restaurante}*\n';
+    mensaje += '💰 *Total Ticket: ${widget.gasto.totalGasto.toStringAsFixed(2)}€*\n\n';
     mensaje += '━━━━━━━━━━━━━━━━━\n\n';
 
     for (var participante in widget.gasto.participantes) {
-      final productos =
-          productosPorParticipante[participante.id] ?? [];
-      final totalParticipante = productos.fold<double>(
-        0,
-        (sum, p) => sum + (p.precioTotal / p.participantesSeleccionados.length),
-      );
+      final totalP = widget.gasto.deudas[participante.id] ?? 0.0;
+      if (totalP <= 0) continue;
 
-      mensaje += '👤 *${participante.nombre}*\n';
-      mensaje += '_Total: ${totalParticipante.toStringAsFixed(2)}€_\n\n';
+      mensaje += '👤 *${participante.nombre.toUpperCase()}*\n';
+      mensaje += '👉 *Debe pagar: ${totalP.toStringAsFixed(2)}€*\n';
 
+      final productos = productosPorParticipante[participante.id] ?? [];
       for (var producto in productos) {
-        final precioPersona = producto.precioTotal /
-            producto.participantesSeleccionados.length;
-        mensaje += '  • ${producto.nombre}: ${precioPersona.toStringAsFixed(2)}€\n';
+        double precioItem;
+        String detalle = "";
+
+        if (widget.gasto.modo == ModoGasto.proporcional) {
+          double raciones = producto.asignacionesProporcionales[participante.id] ?? 0;
+          double totalR = producto.totalAsignado;
+          precioItem = totalR > 0 ? (raciones / totalR) * producto.precioTotal : 0;
+          detalle = " (${raciones.toString().replaceAll(".0", "")} ración/es)";
+        } else {
+          precioItem = producto.precioTotal / producto.participantesSeleccionados.length;
+        }
+
+        if (precioItem > 0) {
+          mensaje += '  • ${producto.nombre}$detalle: ${precioItem.toStringAsFixed(2)}€\n';
+        }
       }
       mensaje += '\n';
     }
 
-    mensaje += '━━━━━━━━━━━━━━━━━';
+    mensaje += '━━━━━━━━━━━━━━━━━\n';
+    mensaje += '_Generado con App de Gastos_';
 
-    await Share.share(
-      mensaje,
-      subject: '${widget.gasto.restaurante} - Resumen de gastos',
-    );
+    await Share.share(mensaje);
   }
 
   Color _getColorForIndex(int index) {
-    final colors = [
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.red,
-      Colors.purple,
-      Colors.pink,
-      Colors.teal,
-      Colors.indigo,
-    ];
+    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple, Colors.pink, Colors.teal, Colors.indigo];
     return colors[index % colors.length];
   }
 }
