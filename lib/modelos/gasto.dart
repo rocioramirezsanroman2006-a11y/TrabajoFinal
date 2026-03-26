@@ -11,7 +11,7 @@ class Gasto {
   final List<Participante> participantes;
   ModoGasto modo;
   final String? notas;
-  late Map<String, double> deudas; // Quién debe a quién
+  late Map<String, double> deudas;
 
   Gasto({
     required this.id,
@@ -30,39 +30,55 @@ class Gasto {
   // Obtener qué consumió cada participante
   Map<String, List<Producto>> obtenerProductosPorParticipante() {
     final mapa = <String, List<Producto>>{};
-    
+
     for (var participante in participantes) {
       mapa[participante.id] = [];
     }
-    
+
     for (var producto in productos) {
+      // Usamos el getter participantesSeleccionados que creamos en el modelo Producto
       for (var participanteId in producto.participantesSeleccionados) {
         if (mapa[participanteId] != null) {
           mapa[participanteId]!.add(producto);
         }
       }
     }
-    
+
     return mapa;
   }
 
   void calcularDeudas() {
     deudas = {};
-    
+
+    // Inicializar deudas a cero para todos
+    for (var p in participantes) {
+      deudas[p.id] = 0.0;
+    }
+
     if (modo == ModoGasto.equitativo) {
-      // División equitativa entre todos los participantes
-      double porPersona = totalGasto / participantes.length;
-      for (var participante in participantes) {
-        deudas[participante.id] = porPersona;
+      // División equitativa total entre todos los participantes
+      if (participantes.isNotEmpty) {
+        double porPersona = totalGasto / participantes.length;
+        for (var p in participantes) {
+          deudas[p.id] = porPersona;
+        }
       }
     } else {
-      // División proporcional según qué consumieron
+      // División PROPORCIONAL basada en raciones
       for (var producto in productos) {
-        if (producto.participantesSeleccionados.isNotEmpty) {
-          double porPersona = producto.precioTotal / producto.participantesSeleccionados.length;
-          for (var participanteId in producto.participantesSeleccionados) {
-            deudas[participanteId] = (deudas[participanteId] ?? 0) + porPersona;
-          }
+        // Obtenemos la suma de todas las raciones asignadas a este plato (ej: 5 + 0 + 0 = 5)
+        double totalRacionesAsignadas = producto.totalAsignado;
+
+        if (totalRacionesAsignadas > 0) {
+          // Calculamos cuánto cuesta 1 ración de este plato específico
+          double precioPorRacion = producto.precioTotal / totalRacionesAsignadas;
+
+          // Repartimos el coste según las raciones de cada uno
+          producto.asignacionesProporcionales.forEach((participanteId, raciones) {
+            if (deudas.containsKey(participanteId)) {
+              deudas[participanteId] = deudas[participanteId]! + (raciones * precioPorRacion);
+            }
+          });
         }
       }
     }

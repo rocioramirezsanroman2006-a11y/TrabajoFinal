@@ -19,6 +19,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
   final _controladorRestaurante = TextEditingController();
   final _controladorProducto = TextEditingController();
   final _controladorPrecio = TextEditingController();
+  final _controladorCantidad = TextEditingController(text: '1');
 
   List<Producto> _productos = [];
   List<Participante> _participantes = [];
@@ -28,6 +29,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
     _controladorRestaurante.dispose();
     _controladorProducto.dispose();
     _controladorPrecio.dispose();
+    _controladorCantidad.dispose();
     super.dispose();
   }
 
@@ -42,14 +44,12 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
       ),
       body: Column(
         children: [
-          // Contenido scrolleable
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Nombre del restaurante
                   TextField(
                     controller: _controladorRestaurante,
                     decoration: InputDecoration(
@@ -62,18 +62,11 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                     ),
                   ),
                   const SizedBox(height: 28),
-
-                  // Título Items
                   const Text(
                     'Elementos del Ticket',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-
-                  // Formulario agregar producto
                   Row(
                     children: [
                       Expanded(
@@ -82,13 +75,8 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                           decoration: InputDecoration(
                             labelText: 'Producto',
                             hintText: 'Ej: Paella mixta',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                           ),
                         ),
                       ),
@@ -96,56 +84,57 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                       Expanded(
                         child: TextField(
                           controller: _controladorPrecio,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           decoration: InputDecoration(
                             labelText: 'Precio',
                             hintText: '0.00€',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                           ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 14),
-
-                  // Botón agregar producto
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _agregarProducto,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Añadir Plato'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        backgroundColor: Colors.blue.shade400,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: TextField(
+                          controller: _controladorCantidad,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          decoration: InputDecoration(
+                            labelText: 'Cant.',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _agregarProducto,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Añadir Plato'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: Colors.blue.shade400,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
-
-                  // Lista de productos
                   if (_productos.isNotEmpty)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'Platos agregados',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                         ),
                         const SizedBox(height: 12),
                         ListView.builder(
@@ -156,37 +145,26 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                             final producto = _productos[index];
                             return Container(
                               margin: const EdgeInsets.only(bottom: 10),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 12,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                               decoration: BoxDecoration(
                                 color: Colors.grey[100],
                                 borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: Colors.grey[300]!,
-                                  width: 1,
-                                ),
+                                border: Border.all(color: Colors.grey[300]!, width: 1),
                               ),
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          producto.nombre,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15,
-                                          ),
+                                          '${producto.cantidad}x ${producto.nombre}',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          '${producto.precio.toStringAsFixed(2)}€',
+                                          '${producto.precio.toStringAsFixed(2)}€/ud',
                                           style: TextStyle(
                                             color: Colors.blue.shade600,
                                             fontWeight: FontWeight.w600,
@@ -199,8 +177,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                                   IconButton(
                                     icon: const Icon(Icons.close),
                                     color: Colors.red,
-                                    onPressed: () =>
-                                        _eliminarProducto(index),
+                                    onPressed: () => _eliminarProducto(index),
                                   ),
                                 ],
                               ),
@@ -210,18 +187,11 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                         const SizedBox(height: 24),
                       ],
                     ),
-
-                  // Título Participantes
                   const Text(
                     'Participantes',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-
-                  // Botón agregar participante
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -234,17 +204,12 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                         foregroundColor: Colors.blue.shade400,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
-                          side: BorderSide(
-                            color: Colors.blue.shade400,
-                            width: 1.5,
-                          ),
+                          side: BorderSide(color: Colors.blue.shade400, width: 1.5),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Lista de participantes en chips
                   if (_participantes.isNotEmpty)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,15 +225,11 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                                 backgroundColor: _getColorForIndex(index),
                                 child: Text(
                                   participante.nombre[0].toUpperCase(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                                 ),
                               ),
                               label: Text(participante.nombre),
-                              onDeleted: () =>
-                                  _eliminarParticipante(index),
+                              onDeleted: () => _eliminarParticipante(index),
                             );
                           }).toList(),
                         ),
@@ -279,7 +240,6 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
               ),
             ),
           ),
-          // Botón continuar pegado al fondo
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             color: Colors.white,
@@ -290,18 +250,12 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Colors.blue.shade600,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 4,
                 ),
                 child: const Text(
                   'Continuar',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
             ),
@@ -313,7 +267,6 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
 
   void _mostrarDialogoAgregarParticipante() {
     final controlador = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -321,26 +274,15 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
         content: TextField(
           controller: controlador,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Nombre',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'Nombre', border: OutlineInputBorder()),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
           TextButton(
             onPressed: () {
               if (controlador.text.isNotEmpty) {
                 setState(() {
-                  _participantes.add(
-                    Participante(
-                      id: DateTime.now().toString(),
-                      nombre: controlador.text,
-                    ),
-                  );
+                  _participantes.add(Participante(id: DateTime.now().toString(), nombre: controlador.text));
                 });
                 Navigator.pop(context);
               }
@@ -352,77 +294,58 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
     );
   }
 
-  void _eliminarParticipante(int index) {
-    setState(() {
-      _participantes.removeAt(index);
-    });
-  }
+  void _eliminarParticipante(int index) => setState(() => _participantes.removeAt(index));
 
   void _agregarProducto() {
     if (_controladorProducto.text.isEmpty || _controladorPrecio.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa todos los campos')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Completa todos los campos')));
       return;
     }
-
     final precio = double.tryParse(_controladorPrecio.text);
+    final cantidad = int.tryParse(_controladorCantidad.text) ?? 1;
     if (precio == null || precio <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Precio inválido')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Precio inválido')));
       return;
     }
-
     setState(() {
-      _productos.add(
-        Producto(
-          id: DateTime.now().toString(),
-          nombre: _controladorProducto.text,
-          precio: precio,
-        ),
-      );
+      _productos.add(Producto(
+        id: DateTime.now().toString(),
+        nombre: _controladorProducto.text,
+        precio: precio,
+        cantidad: cantidad,
+      ));
       _controladorProducto.clear();
       _controladorPrecio.clear();
+      _controladorCantidad.text = '1';
     });
   }
 
-  void _eliminarProducto(int index) {
-    setState(() {
-      _productos.removeAt(index);
-    });
-  }
+  void _eliminarProducto(int index) => setState(() => _productos.removeAt(index));
 
   void _crearGasto() {
     if (_controladorRestaurante.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa el nombre del restaurante')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa el restaurante')));
+      return;
+    }
+    if (_productos.isEmpty || _participantes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Faltan productos o participantes')));
       return;
     }
 
-    if (_productos.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Agrega al menos un producto')),
-      );
-      return;
-    }
+    // CORRECCIÓN: Inicializar el mapa de asignaciones para cada producto
+    final productosConAsignaciones = _productos.map((producto) {
+      // Creamos un nuevo mapa con 1.0 para cada participante actual
+      Map<String, double> inicial = {};
+      for (var p in _participantes) {
+        inicial[p.id] = 1.0;
+      }
 
-    if (_participantes.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Agrega al menos un participante')),
-      );
-      return;
-    }
-
-    // En modo equitativo, todos los productos se asignan a todos los participantes
-    final productosConParticipantes = _productos.map((producto) {
       return Producto(
         id: producto.id,
         nombre: producto.nombre,
         precio: producto.precio,
         cantidad: producto.cantidad,
-        participantesSeleccionados: _participantes.map((p) => p.id).toList(),
+        asignacionesProporcionales: inicial, // Pasamos el mapa, no la lista
       );
     }).toList();
 
@@ -430,7 +353,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
       id: DateTime.now().toString(),
       restaurante: _controladorRestaurante.text,
       fecha: DateTime.now(),
-      productos: productosConParticipantes,
+      productos: productosConAsignaciones,
       participantes: _participantes,
       modo: ModoGasto.equitativo,
     );
@@ -439,16 +362,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
   }
 
   Color _getColorForIndex(int index) {
-    final colors = [
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.red,
-      Colors.purple,
-      Colors.pink,
-      Colors.teal,
-      Colors.indigo,
-    ];
+    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple, Colors.pink, Colors.teal, Colors.indigo];
     return colors[index % colors.length];
   }
 }
