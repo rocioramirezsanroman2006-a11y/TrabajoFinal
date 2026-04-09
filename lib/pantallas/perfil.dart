@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../modelos/historial.dart';
+import 'editar_perfil.dart';
 
 class PantallaPerfil extends StatefulWidget {
   const PantallaPerfil({Key? key}) : super(key: key);
@@ -10,22 +11,19 @@ class PantallaPerfil extends StatefulWidget {
 
 class _PantallaPerfilState extends State<PantallaPerfil> {
   late ServicioHistorial _historial;
-  late TextEditingController _nombreController;
-  late TextEditingController _emailController;
-  bool _enEdicion = false;
+  String _nombre = 'Usuario';
+  String _email = 'usuario@ejemplo.com';
+  String? _telefono;
+  String? _fotoUrl;
 
   @override
   void initState() {
     super.initState();
     _historial = ServicioHistorial();
-    _nombreController = TextEditingController(text: 'Usuario');
-    _emailController = TextEditingController(text: 'usuario@ejemplo.com');
   }
 
   @override
   void dispose() {
-    _nombreController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
@@ -43,20 +41,38 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
         foregroundColor: Colors.black,
         actions: [
           IconButton(
-            icon: Icon(_enEdicion ? Icons.done : Icons.edit),
-            onPressed: () {
-              setState(() {
-                _enEdicion = !_enEdicion;
-              });
-              if (!_enEdicion) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✓ Perfil actualizado'),
-                    duration: Duration(seconds: 2),
-                    backgroundColor: Colors.green,
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => EditarPerfilPage(
+                    nombreInicial: _nombre,
+                    emailInicial: _email,
+                    telefonoInicial: _telefono,
+                    fotoUrl: _fotoUrl,
+                    onGuardar: (nombre, email, telefono, fotoUrl, direccion, fechaNacimiento, genero) {
+                      setState(() {
+                        _nombre = nombre;
+                        _email = email;
+                        _telefono = telefono;
+                        _fotoUrl = fotoUrl;
+                        // Puedes guardar los nuevos campos en variables si quieres mostrarlos en el perfil
+                        // Ejemplo:
+                        // _direccion = direccion;
+                        // _fechaNacimiento = fechaNacimiento;
+                        // _genero = genero;
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('✓ Perfil actualizado'),
+                          duration: Duration(seconds: 2),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    },
                   ),
-                );
-              }
+                ),
+              );
             },
           ),
         ],
@@ -66,7 +82,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Encabezado del perfil - Editable
+            // Encabezado del perfil
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -81,64 +97,31 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      size: 36,
-                      color: Colors.purple[600],
-                    ),
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundImage: _fotoUrl != null && _fotoUrl!.isNotEmpty ? NetworkImage(_fotoUrl!) : null,
+                    child: _fotoUrl == null || _fotoUrl!.isEmpty ? const Icon(Icons.person, size: 36) : null,
                   ),
                   const SizedBox(height: 16),
-                  if (_enEdicion)
-                    TextField(
-                      controller: _nombreController,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Tu nombre',
-                        hintStyle: const TextStyle(color: Colors.white70),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                      ),
-                    )
-                  else
-                    Text(
-                      _nombreController.text,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Text(
+                    _nombre,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
                   const SizedBox(height: 8),
-                  if (_enEdicion)
-                    TextField(
-                      controller: _emailController,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Tu email',
-                        hintStyle: const TextStyle(color: Colors.white54),
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                      ),
-                    )
-                  else
+                  Text(
+                    _email,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  if (_telefono != null && _telefono!.isNotEmpty)
                     Text(
-                      _emailController.text,
+                      _telefono!,
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,

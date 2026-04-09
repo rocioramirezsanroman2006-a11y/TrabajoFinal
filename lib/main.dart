@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:animations/animations.dart';
 import 'pantallas/inicio.dart';
 import 'pantallas/editar_ticket.dart';
 import 'pantallas/dividir_gastos.dart';
@@ -21,6 +24,13 @@ class AplicacionDividirGastos extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        textTheme: GoogleFonts.montserratTextTheme(),
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          },
+        ),
       ),
       home: const PantallaNavegacionPrincipal(),
     );

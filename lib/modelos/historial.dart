@@ -1,6 +1,24 @@
 import 'gasto.dart';
 
 class ServicioHistorial {
+    /// Devuelve una lista de 7 valores con el gasto total de cada día de la semana (Lunes a Domingo)
+    List<double> obtenerGastoPorDiaSemana() {
+      final hoy = DateTime.now();
+      // Día de la semana actual (1=lunes, 7=domingo)
+      final diaHoy = hoy.weekday;
+      // Calcula el lunes de esta semana
+      final lunes = hoy.subtract(Duration(days: diaHoy - 1));
+      // Inicializa lista de 7 días
+      List<double> gastos = List.filled(7, 0.0);
+      for (var gasto in _gastos) {
+        // Solo cuenta los gastos de esta semana
+        final diferencia = gasto.fecha.difference(lunes).inDays;
+        if (diferencia >= 0 && diferencia < 7) {
+          gastos[diferencia] += gasto.totalGasto;
+        }
+      }
+      return gastos;
+    }
   static final ServicioHistorial _instancia = ServicioHistorial._interno();
   
   final List<Gasto> _gastos = [];

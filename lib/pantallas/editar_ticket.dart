@@ -1,3 +1,4 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import '../modelos/producto.dart';
 import '../modelos/participante.dart';
@@ -16,6 +17,28 @@ class PantallaEditarTicket extends StatefulWidget {
 }
 
 class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
+
+    @override
+    void initState() {
+      super.initState();
+      _inicializarNotificaciones();
+    }
+
+    void _inicializarNotificaciones() async {
+      final plugin = FlutterLocalNotificationsPlugin();
+      const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const ios = DarwinInitializationSettings();
+      const settings = InitializationSettings(android: android, iOS: ios);
+      await plugin.initialize(settings);
+    }
+
+    Future<void> _mostrarNotificacionGasto(String restaurante, double total) async {
+      final plugin = FlutterLocalNotificationsPlugin();
+      const android = AndroidNotificationDetails('gasto_channel', 'Gastos', channelDescription: 'Notificaciones de nuevos gastos', importance: Importance.max, priority: Priority.high);
+      const ios = DarwinNotificationDetails();
+      const details = NotificationDetails(android: android, iOS: ios);
+      await plugin.show(0, 'Nuevo gasto registrado', 'Has añadido un gasto en $restaurante por ${total.toStringAsFixed(2)}€', details);
+    }
   final _controladorRestaurante = TextEditingController();
   final _controladorProducto = TextEditingController();
   final _controladorPrecio = TextEditingController();
@@ -322,7 +345,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
 
   void _eliminarProducto(int index) => setState(() => _productos.removeAt(index));
 
-  void _crearGasto() {
+  void _crearGasto() async {
     if (_controladorRestaurante.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa el restaurante')));
       return;
@@ -358,6 +381,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
       modo: ModoGasto.equitativo,
     );
 
+    await _mostrarNotificacionGasto(gasto.restaurante, gasto.totalGasto);
     widget.onGastoCreado(gasto);
   }
 
