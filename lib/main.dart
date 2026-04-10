@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:animations/animations.dart';
+
 import 'pantallas/inicio.dart';
 import 'pantallas/editar_ticket.dart';
 import 'pantallas/dividir_gastos.dart';
 import 'pantallas/historial.dart';
 import 'pantallas/perfil.dart';
+import 'pantallas/login.dart';
+import 'pantallas/registro.dart';
+import 'pantallas/recuperar_contrasena.dart';
 import 'modelos/gasto.dart';
 
 void main() {
@@ -15,7 +19,6 @@ void main() {
 
 class AplicacionDividirGastos extends StatelessWidget {
   const AplicacionDividirGastos({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -32,7 +35,13 @@ class AplicacionDividirGastos extends StatelessWidget {
           },
         ),
       ),
-      home: const PantallaNavegacionPrincipal(),
+      initialRoute: '/iniciar',
+      routes: {
+        '/iniciar': (context) => const LoginScreen(),
+        '/registro': (context) => const RegisterScreen(),
+        '/recuperar': (context) => const ForgotPasswordScreen(),
+        '/principal': (context) => const PantallaNavegacionPrincipal(),
+      },
     );
   }
 }
@@ -56,8 +65,8 @@ class _PantallaNavegacionPrincipalState
     super.initState();
     _pantallas = [
       const PantallaInicio(),
-      const PantallaHistorial(),
-      const PantallaPerfil(),
+      PantallaHistorial(),
+      PantallaPerfil(),
     ];
   }
 

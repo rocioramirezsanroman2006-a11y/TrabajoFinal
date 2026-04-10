@@ -38,7 +38,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
         title: const Text('Perfil'),
         elevation: 0,
         backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.blue,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
@@ -50,17 +50,13 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                     emailInicial: _email,
                     telefonoInicial: _telefono,
                     fotoUrl: _fotoUrl,
-                    onGuardar: (nombre, email, telefono, fotoUrl, direccion, fechaNacimiento, genero) {
+                    onGuardar: (nombre, email, telefono, fotoUrl, direccion,
+                        fechaNacimiento, genero) {
                       setState(() {
                         _nombre = nombre;
                         _email = email;
                         _telefono = telefono;
                         _fotoUrl = fotoUrl;
-                        // Puedes guardar los nuevos campos en variables si quieres mostrarlos en el perfil
-                        // Ejemplo:
-                        // _direccion = direccion;
-                        // _fechaNacimiento = fechaNacimiento;
-                        // _genero = genero;
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -87,11 +83,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.purple.shade400, Colors.purple.shade600],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Colors.blue.shade700,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -99,8 +91,14 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: _fotoUrl != null && _fotoUrl!.isNotEmpty ? NetworkImage(_fotoUrl!) : null,
-                    child: _fotoUrl == null || _fotoUrl!.isEmpty ? const Icon(Icons.person, size: 36) : null,
+                    backgroundImage: _fotoUrl != null && _fotoUrl!.isNotEmpty
+                        ? NetworkImage(_fotoUrl!)
+                        : null,
+                    child: _fotoUrl == null || _fotoUrl!.isEmpty
+                        ? const Icon(Icons.person,
+                            size: 36, color: Colors.white)
+                        : null,
+                    backgroundColor: Colors.blue.shade400,
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -249,7 +247,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                 itemBuilder: (context, index) {
                   final entries = estadisticas.entries.toList();
                   entries.sort((a, b) => b.value.compareTo(a.value));
-                  
+
                   final restaurante = entries[index].key;
                   final gastado = entries[index].value;
 
@@ -276,7 +274,8 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                           setState(() {});
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('$restaurante eliminado de favoritos'),
+                              content:
+                                  Text('$restaurante eliminado de favoritos'),
                               duration: const Duration(seconds: 2),
                             ),
                           );

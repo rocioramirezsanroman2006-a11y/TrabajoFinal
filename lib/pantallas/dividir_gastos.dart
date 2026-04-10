@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../modelos/gasto.dart';
 import '../modelos/producto.dart';
-import '../modelos/historial.dart';
+// import '../modelos/historial.dart';
 import 'resumen_gasto.dart';
 
 class PantallaDividirGastos extends StatefulWidget {
@@ -9,9 +9,9 @@ class PantallaDividirGastos extends StatefulWidget {
   final Function() onGastoFinalizado;
 
   const PantallaDividirGastos({
-    Key? key,
     required this.gasto,
     required this.onGastoFinalizado,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -69,7 +69,6 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
                   const Text(
                     'Participantes',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -77,7 +76,6 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
                   const SizedBox(height: 12),
                   _construirParticipantes(),
                   const SizedBox(height: 28),
-
                   const Text(
                     'Platos',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -85,7 +83,6 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
                   const SizedBox(height: 12),
                   _construirPlatos(),
                   const SizedBox(height: 28),
-
                   const Text(
                     'Opciones de División',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -93,12 +90,12 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
                   const SizedBox(height: 12),
                   _construirSelectorModo(),
                   const SizedBox(height: 16),
-
                   if (_modoSeleccionado == ModoGasto.proporcional) ...[
                     const Divider(height: 28),
                     const Text(
                       'Reparto de cantidades por plato',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     const Text(
@@ -108,7 +105,6 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
                     const SizedBox(height: 16),
                     _construirListaProductosAsignable(),
                   ],
-
                   const Divider(height: 28),
                   _construirResumenDeudas(),
                   const SizedBox(height: 40),
@@ -162,11 +158,16 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
             children: [
               Text(
                 participante.nombre[0].toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18),
               ),
               const SizedBox(height: 2),
               Text(
-                participante.nombre.length > 5 ? '${participante.nombre.substring(0, 4)}.' : participante.nombre,
+                participante.nombre.length > 5
+                    ? '${participante.nombre.substring(0, 4)}.'
+                    : participante.nombre,
                 style: const TextStyle(color: Colors.white, fontSize: 9),
               ),
             ],
@@ -190,10 +191,12 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(producto.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(producto.nombre,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
               Text(
                 '${producto.cantidad}x ${(producto.precio).toStringAsFixed(2)}€',
-                style: TextStyle(color: Colors.blue.shade600, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.blue.shade600, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -207,8 +210,14 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
       width: double.infinity,
       child: SegmentedButton<ModoGasto>(
         segments: const [
-          ButtonSegment(value: ModoGasto.equitativo, label: Text('Equitativo'), icon: Icon(Icons.balance)),
-          ButtonSegment(value: ModoGasto.proporcional, label: Text('Proporcional'), icon: Icon(Icons.pie_chart)),
+          ButtonSegment(
+              value: ModoGasto.equitativo,
+              label: Text('Equitativo'),
+              icon: Icon(Icons.balance)),
+          ButtonSegment(
+              value: ModoGasto.proporcional,
+              label: Text('Proporcional'),
+              icon: Icon(Icons.pie_chart)),
         ],
         selected: {_modoSeleccionado},
         onSelectionChanged: (newSelection) {
@@ -256,9 +265,13 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Total:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text('Total:',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             Text('${widget.gasto.totalGasto.toStringAsFixed(2)}€',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blue)),
+                style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue)),
           ],
         ),
         const SizedBox(height: 16),
@@ -270,7 +283,8 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(p.nombre),
-                Text('${deuda.toStringAsFixed(2)}€', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('${deuda.toStringAsFixed(2)}€',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
           );
@@ -292,7 +306,14 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
   }
 
   Color _getColorForIndex(int index) {
-    final colors = [Colors.blue, Colors.green, Colors.orange, Colors.red, Colors.purple, Colors.teal];
+    final colors = [
+      Colors.blue,
+      Colors.green,
+      Colors.orange,
+      Colors.red,
+      Colors.purple,
+      Colors.teal
+    ];
     return colors[index % colors.length];
   }
 }
@@ -317,7 +338,9 @@ class _TarjetaProductoProporcional extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,13 +348,17 @@ class _TarjetaProductoProporcional extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(producto.nombre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text('Total Comprado: ${producto.cantidad}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              Text(producto.nombre,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16)),
+              Text('Total Comprado: ${producto.cantidad}',
+                  style: const TextStyle(color: Colors.grey, fontSize: 12)),
             ],
           ),
           const Divider(),
           ...participantes.map((p) {
-            double valorActual = producto.asignacionesProporcionales[p.id] ?? 0.0;
+            double valorActual =
+                producto.asignacionesProporcionales[p.id] ?? 0.0;
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -339,12 +366,14 @@ class _TarjetaProductoProporcional extends StatelessWidget {
                 children: [
                   Expanded(flex: 2, child: Text(p.nombre)),
                   IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
+                    icon: const Icon(Icons.remove_circle_outline,
+                        color: Colors.redAccent),
                     onPressed: valorActual > 0
                         ? () {
-                      producto.asignacionesProporcionales[p.id] = (valorActual - 0.5);
-                      onCambio();
-                    }
+                            producto.asignacionesProporcionales[p.id] =
+                                (valorActual - 0.5);
+                            onCambio();
+                          }
                         : null,
                   ),
                   Container(
@@ -352,13 +381,16 @@ class _TarjetaProductoProporcional extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Text(
                       valorActual.toString().replaceAll('.0', ''),
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+                    icon: const Icon(Icons.add_circle_outline,
+                        color: Colors.green),
                     onPressed: () {
-                      producto.asignacionesProporcionales[p.id] = (valorActual + 0.5);
+                      producto.asignacionesProporcionales[p.id] =
+                          (valorActual + 0.5);
                       onCambio();
                     },
                   ),

@@ -1,26 +1,7 @@
 import 'gasto.dart';
 
 class ServicioHistorial {
-    /// Devuelve una lista de 7 valores con el gasto total de cada día de la semana (Lunes a Domingo)
-    List<double> obtenerGastoPorDiaSemana() {
-      final hoy = DateTime.now();
-      // Día de la semana actual (1=lunes, 7=domingo)
-      final diaHoy = hoy.weekday;
-      // Calcula el lunes de esta semana
-      final lunes = hoy.subtract(Duration(days: diaHoy - 1));
-      // Inicializa lista de 7 días
-      List<double> gastos = List.filled(7, 0.0);
-      for (var gasto in _gastos) {
-        // Solo cuenta los gastos de esta semana
-        final diferencia = gasto.fecha.difference(lunes).inDays;
-        if (diferencia >= 0 && diferencia < 7) {
-          gastos[diferencia] += gasto.totalGasto;
-        }
-      }
-      return gastos;
-    }
   static final ServicioHistorial _instancia = ServicioHistorial._interno();
-  
   final List<Gasto> _gastos = [];
   final List<String> _favoritos = [];
 
@@ -30,12 +11,25 @@ class ServicioHistorial {
 
   ServicioHistorial._interno();
 
+  List<double> obtenerGastoPorDiaSemana() {
+    final hoy = DateTime.now();
+    final diaHoy = hoy.weekday;
+    final lunes = hoy.subtract(Duration(days: diaHoy - 1));
+    var gastos = List.filled(7, 0.0);
+    for (var gasto in _gastos) {
+      final diferencia = gasto.fecha.difference(lunes).inDays;
+      if (diferencia >= 0 && diferencia < 7) {
+        gastos[diferencia] += gasto.totalGasto;
+      }
+    }
+    return gastos;
+  }
+
   List<Gasto> obtenerGastos() => List.from(_gastos);
-  
+
   List<Gasto> obtenerGastosDeEstaSemana() {
     final hoy = DateTime.now();
     final hace7Dias = hoy.subtract(Duration(days: 7));
-    
     return _gastos.where((g) => g.fecha.isAfter(hace7Dias)).toList();
   }
 
@@ -44,11 +38,12 @@ class ServicioHistorial {
   }
 
   double obtenerGastoSemanalTotal() {
-    return obtenerGastosDeEstaSemana().fold(0, (sum, gasto) => sum + gasto.totalGasto);
+    return obtenerGastosDeEstaSemana()
+        .fold(0, (sum, gasto) => sum + gasto.totalGasto);
   }
 
   void agregarGasto(Gasto gasto) {
-    _gastos.insert(0, gasto); // Insertar al inicio para orden descendente
+    _gastos.insert(0, gasto);
   }
 
   void eliminarGasto(String id) {
@@ -82,7 +77,8 @@ class ServicioHistorial {
   Map<String, double> obtenerEstadisticas() {
     Map<String, double> stats = {};
     for (var gasto in _gastos) {
-      stats[gasto.restaurante] = (stats[gasto.restaurante] ?? 0) + gasto.totalGasto;
+      stats[gasto.restaurante] =
+          (stats[gasto.restaurante] ?? 0) + gasto.totalGasto;
     }
     return stats;
   }
