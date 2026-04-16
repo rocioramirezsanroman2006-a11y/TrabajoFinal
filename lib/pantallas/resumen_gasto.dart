@@ -6,11 +6,13 @@ import '../modelos/historial.dart';
 class PantallaResumenGasto extends StatefulWidget {
   final Gasto gasto;
   final Function() onVolver;
+  final bool esSoloLectura;
 
   const PantallaResumenGasto({
     Key? key,
     required this.gasto,
     required this.onVolver,
+    this.esSoloLectura = false,
   }) : super(key: key);
 
   @override
@@ -18,13 +20,13 @@ class PantallaResumenGasto extends StatefulWidget {
 }
 
 class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
+  bool _guardando = false;
+
   @override
   void initState() {
     super.initState();
-    // Nos aseguramos que las deudas estén calculadas antes de guardar
+    // Solo calculamos para mostrar el resumen; no guardamos aqui para evitar duplicados.
     widget.gasto.calcularDeudas();
-    final historial = ServicioHistorial();
-    historial.agregarGasto(widget.gasto);
   }
 
   @override
@@ -185,20 +187,36 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('✓ Gasto guardado correctamente'), backgroundColor: Colors.green),
-                    );
-                    Future.delayed(const Duration(seconds: 1), () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    });
-                  },
+                  onPressed: _guardando
+                      ? null
+                      : () {
+                          if (widget.esSoloLectura) {
+                            Navigator.of(context).pop();
+                            return;
+                          }
+
+                          setState(() {
+                            _guardando = true;
+                          });
+
+                          ServicioHistorial().agregarGasto(widget.gasto);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('✓ Gasto guardado correctamente'), backgroundColor: Colors.green),
+                          );
+                          Future.delayed(const Duration(seconds: 1), () {
+                            if (!mounted) return;
+                            Navigator.of(context).popUntil((route) => route.isFirst);
+                          });
+                        },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Colors.blue.shade600,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Finalizar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    widget.esSoloLectura ? 'Volver' : 'Finalizar',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

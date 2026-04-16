@@ -30,6 +30,8 @@ class ServicioHistorial {
   }
 
   void agregarGasto(Gasto gasto) {
+    final yaExiste = _gastos.any((g) => g.id == gasto.id);
+    if (yaExiste) return;
     _gastos.insert(0, gasto); // Insertar al inicio para orden descendente
   }
 

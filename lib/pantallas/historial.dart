@@ -142,6 +142,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
                           MaterialPageRoute(
                             builder: (context) => PantallaResumenGasto(
                               gasto: gasto,
+                              esSoloLectura: true,
                               onVolver: () {
                                 Navigator.of(context).pop();
                               },
