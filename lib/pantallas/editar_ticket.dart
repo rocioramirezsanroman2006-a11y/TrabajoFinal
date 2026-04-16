@@ -39,8 +39,6 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
       appBar: AppBar(
         title: const Text('Editar Ticket'),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
       ),
       body: Column(
         children: [
@@ -242,7 +240,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
           ),
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-            color: Colors.white,
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(

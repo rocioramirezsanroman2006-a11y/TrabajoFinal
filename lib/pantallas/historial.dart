@@ -9,15 +9,14 @@ class PantallaHistorial extends StatefulWidget {
   State<PantallaHistorial> createState() => _PantallaHistorialState();
 }
 
-class _PantallaHistorialState extends State<PantallaHistorial>
-    with TickerProviderStateMixin {
+class _PantallaHistorialState extends State<PantallaHistorial> with TickerProviderStateMixin {
   late TabController _tabController;
   late ServicioHistorial _historial;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _historial = ServicioHistorial();
   }
 
@@ -38,6 +37,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
           tabs: const [
             Tab(text: 'Hoy'),
             Tab(text: 'Favoritos'),
+            Tab(text: 'Tendencias'),
           ],
         ),
       ),
@@ -46,8 +46,122 @@ class _PantallaHistorialState extends State<PantallaHistorial>
         children: [
           _construirPantallaHistorial(),
           _construirPantallaFavoritos(),
+          _construirPantallaTendencias(),
         ],
       ),
+    );
+  }
+
+  Widget _construirPantallaTendencias() {
+    final gastos = _historial.obtenerGastos();
+    final semanal = _historial.obtenerEvolucionSemanal();
+    final mensual = _historial.obtenerEvolucionMensual();
+    final restaurantes = _historial.obtenerRestaurantesFrecuentes(limite: 5);
+    final gastoMedio = _historial.obtenerGastoMedioPorVisita();
+    final productoTop = _historial.obtenerProductoMasConsumido();
+
+    if (gastos.isEmpty) {
+      return Center(
+        child: Text(
+          'Escanea tickets para ver tus tendencias',
+          style: TextStyle(color: Colors.grey[600]),
+        ),
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        _TarjetaEvolucion(
+          titulo: 'Evolucion semanal',
+          datos: semanal,
+          color: Colors.blue,
+        ),
+        const SizedBox(height: 12),
+        _TarjetaEvolucion(
+          titulo: 'Evolucion mensual',
+          datos: mensual,
+          color: Colors.teal,
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Restaurantes favoritos por visitas',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                if (restaurantes.isEmpty)
+                  const Text('Sin datos todavia')
+                else
+                  ...restaurantes.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final item = entry.value;
+                    return ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        radius: 14,
+                        child: Text('${index + 1}'),
+                      ),
+                      title: Text(item.restaurante),
+                      subtitle: Text('${item.visitas} visita${item.visitas > 1 ? 's' : ''}'),
+                      trailing: Text('${item.gastoTotal.toStringAsFixed(2)}€'),
+                    );
+                  }),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Estadisticas de consumo',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ItemEstadistica(
+                        titulo: 'Gasto medio',
+                        valor: '${gastoMedio.toStringAsFixed(2)}€',
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ItemEstadistica(
+                        titulo: 'Producto top',
+                        valor: productoTop == null ? 'N/D' : '${productoTop.nombre} (${productoTop.unidades})',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _historial.obtenerTicketsNubeUsuarioActual(),
+                  builder: (context, snapshot) {
+                    final totalNube = snapshot.data?.length ?? 0;
+                    return Text(
+                      'Tickets sincronizados en nube: $totalNube',
+                      style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -81,7 +195,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
       padding: const EdgeInsets.all(16),
       itemCount: gastos.length,
       itemBuilder: (context, index) {
-        final gasto = gastos[gastos.length - 1 - index]; // Orden inverso
+        final gasto = gastos[gastos.length - 1 - index];
         final esFavorito = _historial.obtenerFavoritos().contains(gasto.restaurante);
 
         return Container(
@@ -93,7 +207,6 @@ class _PantallaHistorialState extends State<PantallaHistorial>
           ),
           child: Column(
             children: [
-              // Header con info del gasto
               Padding(
                 padding: const EdgeInsets.all(14),
                 child: Row(
@@ -104,35 +217,24 @@ class _PantallaHistorialState extends State<PantallaHistorial>
                         children: [
                           Text(
                             gasto.restaurante,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '${gasto.fecha.day}/${gasto.fecha.month}/${gasto.fecha.year}',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
                           ),
                         ],
                       ),
                     ),
                     Text(
                       '${gasto.totalGasto.toStringAsFixed(2)}€',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade600,
-                      ),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade600),
                     ),
                   ],
                 ),
               ),
               const Divider(height: 1),
-              // Botones de acción
               Row(
                 children: [
                   Expanded(
@@ -152,9 +254,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
                       },
                       icon: const Icon(Icons.receipt_long),
                       label: const Text('Ver'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.blue,
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: Colors.blue),
                     ),
                   ),
                   Expanded(
@@ -171,9 +271,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
                       },
                       icon: const Icon(Icons.delete),
                       label: const Text('Eliminar'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.red,
-                      ),
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
                     ),
                   ),
                   Expanded(
@@ -186,9 +284,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
                         }
                         setState(() {});
                       },
-                      icon: Icon(
-                        esFavorito ? Icons.favorite : Icons.favorite_border,
-                      ),
+                      icon: Icon(esFavorito ? Icons.favorite : Icons.favorite_border),
                       label: Text(esFavorito ? '★' : '☆'),
                       style: TextButton.styleFrom(
                         foregroundColor: esFavorito ? Colors.red : Colors.grey,
@@ -221,10 +317,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
             const SizedBox(height: 16),
             Text(
               'No hay favoritos',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
             ),
           ],
         ),
@@ -237,10 +330,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
       itemBuilder: (context, index) {
         final restaurante = favoritos[index];
         final gastado = estadisticas[restaurante] ?? 0;
-        final gastosDelRestaurante = _historial
-            .obtenerGastos()
-            .where((g) => g.restaurante == restaurante)
-            .length;
+        final gastosDelRestaurante = _historial.obtenerGastos().where((g) => g.restaurante == restaurante).length;
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -259,7 +349,7 @@ class _PantallaHistorialState extends State<PantallaHistorial>
             ),
             title: Text(restaurante),
             subtitle: Text(
-              '${gastosDelRestaurante} gasto${gastosDelRestaurante > 1 ? 's' : ''} · Total: ${gastado.toStringAsFixed(2)}€',
+              '$gastosDelRestaurante gasto${gastosDelRestaurante > 1 ? 's' : ''} · Total: ${gastado.toStringAsFixed(2)}€',
             ),
             trailing: IconButton(
               icon: const Icon(Icons.favorite),
@@ -269,15 +359,101 @@ class _PantallaHistorialState extends State<PantallaHistorial>
                   _historial.eliminarFavorito(restaurante);
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Eliminado de favoritos'),
-                  ),
+                  const SnackBar(content: Text('Eliminado de favoritos')),
                 );
               },
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _TarjetaEvolucion extends StatelessWidget {
+  final String titulo;
+  final List<PuntoEvolucion> datos;
+  final Color color;
+
+  const _TarjetaEvolucion({
+    required this.titulo,
+    required this.datos,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final maximo = datos.fold<double>(0.0, (max, p) => p.total > max ? p.total : max);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(titulo, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            ...datos.map((p) {
+              final progreso = maximo == 0 ? 0.0 : p.total / maximo;
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: [
+                    SizedBox(width: 86, child: Text(p.etiqueta, style: const TextStyle(fontSize: 12))),
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value: progreso,
+                        minHeight: 8,
+                        borderRadius: BorderRadius.circular(8),
+                        backgroundColor: color.withValues(alpha: 0.12),
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 72,
+                      child: Text(
+                        '${p.total.toStringAsFixed(2)}€',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ItemEstadistica extends StatelessWidget {
+  final String titulo;
+  final String valor;
+
+  const _ItemEstadistica({
+    required this.titulo,
+    required this.valor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(titulo, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+          const SizedBox(height: 6),
+          Text(valor, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 }

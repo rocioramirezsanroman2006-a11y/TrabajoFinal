@@ -26,6 +26,14 @@ class Producto {
   double get totalAsignado =>
       asignacionesProporcionales.values.fold(0.0, (sum, val) => sum + val);
 
+  // Cantidad máxima que todavía se puede asignar a un participante concreto.
+  double maximoAsignablePara(String participanteId) {
+    final actual = asignacionesProporcionales[participanteId] ?? 0.0;
+    final usadoSinActual = totalAsignado - actual;
+    final restante = cantidad - usadoSinActual;
+    return restante < 0 ? 0 : restante.toDouble();
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -39,10 +47,39 @@ class Producto {
 
   // Método para actualizar quién come cuánto sin romper la lógica interna
   void actualizarAsignacion(String participanteId, double nuevaCantidad) {
-    if (nuevaCantidad <= 0) {
+    final maximoPermitido = maximoAsignablePara(participanteId);
+    final cantidadAjustada = nuevaCantidad.clamp(0, maximoPermitido).toDouble();
+
+    if (cantidadAjustada <= 0) {
       asignacionesProporcionales.remove(participanteId);
     } else {
-      asignacionesProporcionales[participanteId] = nuevaCantidad;
+      asignacionesProporcionales[participanteId] = cantidadAjustada;
+    }
+  }
+
+  // Corrige asignaciones existentes para que no excedan la cantidad comprada.
+  void normalizarAsignacionesAlMaximo() {
+    if (asignacionesProporcionales.isEmpty) return;
+
+    double acumulado = 0.0;
+    final ids = asignacionesProporcionales.keys.toList();
+
+    for (final id in ids) {
+      final valor = asignacionesProporcionales[id] ?? 0.0;
+      if (valor <= 0) {
+        asignacionesProporcionales.remove(id);
+        continue;
+      }
+
+      final restante = cantidad - acumulado;
+      if (restante <= 0) {
+        asignacionesProporcionales.remove(id);
+        continue;
+      }
+
+      final ajustado = valor > restante ? restante : valor;
+      asignacionesProporcionales[id] = ajustado;
+      acumulado += ajustado;
     }
   }
 }

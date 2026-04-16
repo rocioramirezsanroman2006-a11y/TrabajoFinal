@@ -42,8 +42,6 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
         appBar: AppBar(
           title: const Text('Resumen'),
           elevation: 0,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),

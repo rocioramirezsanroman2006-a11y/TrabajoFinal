@@ -18,8 +18,6 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
       appBar: AppBar(
         title: const Text('Ajustes'),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -36,28 +34,34 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
                 ),
               ),
             ),
-            ListTile(
-              title: const Text('Recordatorios de gastos'),
-              subtitle: const Text('Recibir notificaciones de nuevos gastos'),
-              trailing: Switch(
-                value: _notificaciones,
-                onChanged: (valor) {
-                  setState(() {
-                    _notificaciones = valor;
-                  });
-                },
+            Card(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              child: ListTile(
+                title: const Text('Recordatorios de gastos'),
+                subtitle: const Text('Recibir notificaciones de nuevos gastos'),
+                trailing: Switch(
+                  value: _notificaciones,
+                  onChanged: (valor) {
+                    setState(() {
+                      _notificaciones = valor;
+                    });
+                  },
+                ),
               ),
             ),
-            ListTile(
-              title: const Text('Guardar automáticamente'),
-              subtitle: const Text('Guardar gastos sin confirmación'),
-              trailing: Switch(
-                value: _historialAutomatico,
-                onChanged: (valor) {
-                  setState(() {
-                    _historialAutomatico = valor;
-                  });
-                },
+            Card(
+              margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: ListTile(
+                title: const Text('Guardar automáticamente'),
+                subtitle: const Text('Guardar gastos sin confirmación'),
+                trailing: Switch(
+                  value: _historialAutomatico,
+                  onChanged: (valor) {
+                    setState(() {
+                      _historialAutomatico = valor;
+                    });
+                  },
+                ),
               ),
             ),
             const Divider(),
@@ -73,24 +77,27 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
                 ),
               ),
             ),
-            ListTile(
-              title: const Text('Moneda'),
-              subtitle: Text('Actualmente: $_moneda'),
-              trailing: DropdownButton<String>(
-                value: _moneda,
-                items: const ['€', '\$', '£', '¥'].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (valor) {
-                  if (valor != null) {
-                    setState(() {
-                      _moneda = valor;
-                    });
-                  }
-                },
+            Card(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              child: ListTile(
+                title: const Text('Moneda'),
+                subtitle: Text('Actualmente: $_moneda'),
+                trailing: DropdownButton<String>(
+                  value: _moneda,
+                  items: const ['€', '\$', '£', '¥'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (valor) {
+                    if (valor != null) {
+                      setState(() {
+                        _moneda = valor;
+                      });
+                    }
+                  },
+                ),
               ),
             ),
             const Divider(),
@@ -106,18 +113,24 @@ class _PantallaAjustesState extends State<PantallaAjustes> {
                 ),
               ),
             ),
-            ListTile(
-              title: const Text('Versión de la aplicación'),
-              subtitle: const Text('v1.0.0'),
-              trailing: const Icon(Icons.info_outline),
+            Card(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              child: const ListTile(
+                title: Text('Version de la aplicacion'),
+                subtitle: Text('v1.0.0'),
+                trailing: Icon(Icons.info_outline),
+              ),
             ),
-            ListTile(
-              title: const Text('Limpiar historial'),
-              subtitle: const Text('Eliminar todos los gastos guardados'),
-              trailing: const Icon(Icons.delete_outline, color: Colors.red),
-              onTap: () {
-                _mostrarDialogoConfirmacion();
-              },
+            Card(
+              margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: ListTile(
+                title: const Text('Limpiar historial'),
+                subtitle: const Text('Eliminar todos los gastos guardados'),
+                trailing: const Icon(Icons.delete_outline, color: Colors.red),
+                onTap: () {
+                  _mostrarDialogoConfirmacion();
+                },
+              ),
             ),
             const SizedBox(height: 20),
 

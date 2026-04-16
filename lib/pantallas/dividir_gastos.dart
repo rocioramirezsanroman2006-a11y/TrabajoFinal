@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../modelos/gasto.dart';
 import '../modelos/producto.dart';
-import '../modelos/historial.dart';
 import 'resumen_gasto.dart';
 
 class PantallaDividirGastos extends StatefulWidget {
@@ -49,8 +48,6 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
       appBar: AppBar(
         title: const Text('Dividir Gastos'),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
       ),
       body: Column(
         children: [
@@ -118,7 +115,7 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
           ),
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-            color: Colors.white,
+            color: Theme.of(context).scaffoldBackgroundColor,
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -223,6 +220,10 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
                   producto.asignacionesProporcionales[p.id] = 1.0;
                 }
               }
+            } else {
+              for (var producto in widget.gasto.productos) {
+                producto.normalizarAsignacionesAlMaximo();
+              }
             }
 
             widget.gasto.modo = _modoSeleccionado;
@@ -310,14 +311,16 @@ class _TarjetaProductoProporcional extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final restanteTotal = (producto.cantidad - producto.totalAsignado).clamp(0, producto.cantidad.toDouble());
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,9 +332,16 @@ class _TarjetaProductoProporcional extends StatelessWidget {
               Text('Total Comprado: ${producto.cantidad}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
             ],
           ),
+          const SizedBox(height: 4),
+          Text(
+            'Asignado: ${producto.totalAsignado.toStringAsFixed(1)} / ${producto.cantidad.toDouble().toStringAsFixed(1)} · Restante: ${restanteTotal.toStringAsFixed(1)}',
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
           const Divider(),
           ...participantes.map((p) {
             double valorActual = producto.asignacionesProporcionales[p.id] ?? 0.0;
+            final maximo = producto.maximoAsignablePara(p.id);
+            final puedeSumar = valorActual + 0.5 <= maximo + 0.0001;
 
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -342,9 +352,9 @@ class _TarjetaProductoProporcional extends StatelessWidget {
                     icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
                     onPressed: valorActual > 0
                         ? () {
-                      producto.asignacionesProporcionales[p.id] = (valorActual - 0.5);
-                      onCambio();
-                    }
+                            producto.actualizarAsignacion(p.id, valorActual - 0.5);
+                            onCambio();
+                          }
                         : null,
                   ),
                   Container(
@@ -357,10 +367,12 @@ class _TarjetaProductoProporcional extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.add_circle_outline, color: Colors.green),
-                    onPressed: () {
-                      producto.asignacionesProporcionales[p.id] = (valorActual + 0.5);
-                      onCambio();
-                    },
+                    onPressed: puedeSumar
+                        ? () {
+                            producto.actualizarAsignacion(p.id, valorActual + 0.5);
+                            onCambio();
+                          }
+                        : null,
                   ),
                 ],
               ),

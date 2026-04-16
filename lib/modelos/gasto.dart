@@ -66,6 +66,8 @@ class Gasto {
     } else {
       // División PROPORCIONAL basada en raciones
       for (var producto in productos) {
+        producto.normalizarAsignacionesAlMaximo();
+
         // Obtenemos la suma de todas las raciones asignadas a este plato (ej: 5 + 0 + 0 = 5)
         double totalRacionesAsignadas = producto.totalAsignado;
 

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import '../modelos/historial.dart';
+import '../servicios/autenticacion.dart';
 
 class PantallaPerfil extends StatefulWidget {
-  const PantallaPerfil({Key? key}) : super(key: key);
+  final VoidCallback? onCerrarSesion;
+
+  const PantallaPerfil({
+    Key? key,
+    this.onCerrarSesion,
+  }) : super(key: key);
 
   @override
   State<PantallaPerfil> createState() => _PantallaPerfilState();
@@ -18,8 +24,9 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
   void initState() {
     super.initState();
     _historial = ServicioHistorial();
-    _nombreController = TextEditingController(text: 'Usuario');
-    _emailController = TextEditingController(text: 'usuario@ejemplo.com');
+    final usuario = ServicioAutenticacion().usuarioActual;
+    _nombreController = TextEditingController(text: usuario?.nombre ?? 'Usuario');
+    _emailController = TextEditingController(text: usuario?.email ?? 'usuario@ejemplo.com');
   }
 
   @override
@@ -39,8 +46,6 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
       appBar: AppBar(
         title: const Text('Perfil'),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
         actions: [
           IconButton(
             icon: Icon(_enEdicion ? Icons.done : Icons.edit),
@@ -310,6 +315,25 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                   );
                 },
               ),
+            const SizedBox(height: 24),
+
+            if (widget.onCerrarSesion != null)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    widget.onCerrarSesion!();
+                  },
+                  icon: const Icon(Icons.logout),
+                  label: const Text('Cerrar sesion'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red.shade600,
+                    side: BorderSide(color: Colors.red.shade200),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+
             const SizedBox(height: 24),
           ],
         ),
