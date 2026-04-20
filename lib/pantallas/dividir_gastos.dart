@@ -44,6 +44,9 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
 
   @override
   Widget build(BuildContext context) {
+    final divisionBloqueada =
+        _modoSeleccionado == ModoGasto.proporcional && !widget.gasto.puedeConfirmarDivision;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dividir Gastos'),
@@ -116,27 +119,48 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             color: Theme.of(context).scaffoldBackgroundColor,
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _irAResumen(context),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.blue.shade600,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (divisionBloqueada)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: const [
+                        Icon(Icons.lock_outline, size: 16, color: Colors.orange),
+                        SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Completa todos los platos (sin cantidad restante) para dividir la cuenta.',
+                            style: TextStyle(fontSize: 12, color: Colors.orange),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  elevation: 4,
-                ),
-                child: const Text(
-                  'Dividir',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: divisionBloqueada ? null : () => _irAResumen(context),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Colors.blue.shade600,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 4,
+                    ),
+                    child: const Text(
+                      'Dividir',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -281,6 +305,15 @@ class _PantallaDividirGastosState extends State<PantallaDividirGastos> {
   }
 
   void _irAResumen(BuildContext context) {
+    if (_modoSeleccionado == ModoGasto.proporcional && !widget.gasto.puedeConfirmarDivision) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Debes repartir por completo todos los platos antes de dividir.'),
+        ),
+      );
+      return;
+    }
+
     widget.gasto.calcularDeudas();
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -312,14 +345,16 @@ class _TarjetaProductoProporcional extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final restanteTotal = (producto.cantidad - producto.totalAsignado).clamp(0, producto.cantidad.toDouble());
+    final incompleto = !producto.estaCompletamenteAsignado();
+    final colorEstado = incompleto ? Colors.red.shade600 : Colors.grey;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: incompleto ? Colors.red.shade50 : Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: incompleto ? Colors.red.shade300 : Colors.grey.shade200, width: incompleto ? 1.5 : 1),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5)],
       ),
       child: Column(
@@ -329,13 +364,16 @@ class _TarjetaProductoProporcional extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(producto.nombre, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text('Total Comprado: ${producto.cantidad}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              Text(
+                'Total Comprado: ${producto.cantidad}',
+                style: TextStyle(color: incompleto ? Colors.red.shade700 : Colors.grey, fontSize: 12),
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
             'Asignado: ${producto.totalAsignado.toStringAsFixed(1)} / ${producto.cantidad.toDouble().toStringAsFixed(1)} · Restante: ${restanteTotal.toStringAsFixed(1)}',
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(fontSize: 12, color: colorEstado, fontWeight: incompleto ? FontWeight.w600 : FontWeight.normal),
           ),
           const Divider(),
           ...participantes.map((p) {

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'app_navigation_observer.dart';
 import 'pantallas/inicio.dart';
 import 'pantallas/editar_ticket.dart';
 import 'pantallas/dividir_gastos.dart';
@@ -23,6 +25,7 @@ class AplicacionDividirGastos extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Dividir Gastos',
+      navigatorObservers: [appRouteObserver],
       theme: ThemeData(
         colorScheme: colorScheme,
         useMaterial3: true,
@@ -157,9 +160,23 @@ class _PantallaNavegacionPrincipalState
         ],
       ),
       floatingActionButton: _indiceSeleccionado == 0
-          ? FloatingActionButton(
-              onPressed: () => _iniciarNuevoGasto(context),
-              child: const Icon(Icons.add),
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton.extended(
+                  heroTag: 'fab_escaneo_directo',
+                  onPressed: () => _iniciarEscaneoDirecto(context),
+                  icon: const Icon(Icons.camera_alt_outlined),
+                  label: const Text('Escanear'),
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  heroTag: 'fab_nuevo_ticket',
+                  onPressed: () => _iniciarNuevoGasto(context),
+                  child: const Icon(Icons.add),
+                ),
+              ],
             )
           : null,
     );
@@ -170,6 +187,17 @@ class _PantallaNavegacionPrincipalState
       MaterialPageRoute(
         builder: (context) => PantallaEditarTicket(
           onGastoCreado: _procesarNuevoGasto,
+        ),
+      ),
+    );
+  }
+
+  void _iniciarEscaneoDirecto(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PantallaEditarTicket(
+          onGastoCreado: _procesarNuevoGasto,
+          origenEscaneoInicial: ImageSource.camera,
         ),
       ),
     );

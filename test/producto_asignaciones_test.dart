@@ -39,6 +39,26 @@ void main() {
       expect(producto.totalAsignado, 2.0);
       expect(producto.asignacionesProporcionales.containsKey('c'), isFalse);
     });
+
+    test('solo esta completamente asignado cuando total asignado iguala cantidad', () {
+      final producto = Producto(
+        id: '1',
+        nombre: 'Tortilla',
+        precio: 12,
+        cantidad: 3,
+        asignacionesProporcionales: {
+          'a': 1.0,
+          'b': 1.0,
+        },
+      );
+
+      expect(producto.estaCompletamenteAsignado(), isFalse);
+
+      producto.actualizarAsignacion('b', 2.0);
+
+      expect(producto.totalAsignado, 3.0);
+      expect(producto.estaCompletamenteAsignado(), isTrue);
+    });
   });
 }
 

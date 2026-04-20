@@ -14,8 +14,11 @@ class BaseDatosNube {
     required Gasto gasto,
   }) async {
     final tickets = _ticketsPorUsuario.putIfAbsent(userId, () => []);
-    final existe = tickets.any((t) => t['id'] == gasto.id);
-    if (existe) return;
+    final indiceExistente = tickets.indexWhere((t) => t['id'] == gasto.id);
+    if (indiceExistente != -1) {
+      tickets[indiceExistente] = gasto.toMap();
+      return;
+    }
 
     tickets.insert(0, gasto.toMap());
   }

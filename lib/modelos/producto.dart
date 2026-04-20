@@ -21,6 +21,10 @@ class Producto {
   double get totalAsignado =>
       asignacionesProporcionales.values.fold(0.0, (sum, val) => sum + val);
 
+  bool estaCompletamenteAsignado({double tolerancia = 0.0001}) {
+    return (totalAsignado - cantidad).abs() <= tolerancia;
+  }
+
   // Cantidad máxima que todavía se puede asignar a un participante concreto.
   double maximoAsignablePara(String participanteId) {
     final actual = asignacionesProporcionales[participanteId] ?? 0.0;

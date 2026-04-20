@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../modelos/gasto.dart';
 import '../modelos/historial.dart';
 import 'resumen_gasto.dart';
+import 'valorar_restaurante.dart';
 
 class PantallaHistorial extends StatefulWidget {
   const PantallaHistorial({Key? key}) : super(key: key);
@@ -62,9 +64,13 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
 
     if (gastos.isEmpty) {
       return Center(
-        child: Text(
-          'Escanea tickets para ver tus tendencias',
-          style: TextStyle(color: Colors.grey[600]),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Aun no tienes datos de tendencias. Finaliza al menos un ticket para empezar a ver tu evolucion.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[600]),
+          ),
         ),
       );
     }
@@ -180,7 +186,8 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
             ),
             const SizedBox(height: 16),
             Text(
-              'No hay historial',
+              'Aun no hay historial. Crea y finaliza tu primer ticket para verlo aqui.',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
@@ -196,7 +203,7 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
       itemCount: gastos.length,
       itemBuilder: (context, index) {
         final gasto = gastos[gastos.length - 1 - index];
-        final esFavorito = _historial.obtenerFavoritos().contains(gasto.restaurante);
+        final esFavorito = _historial.esFavorito(gasto.restauranteId);
 
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
@@ -224,6 +231,29 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
                             '${gasto.fecha.day}/${gasto.fecha.month}/${gasto.fecha.year}',
                             style: TextStyle(color: Colors.grey[600], fontSize: 13),
                           ),
+                          if (gasto.valoracion != null) ...[
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                _EstrellasValoracion(valor: gasto.valoracion!.media, tamano: 14),
+                                const SizedBox(width: 6),
+                                Text(
+                                  gasto.valoracion!.media.toStringAsFixed(1),
+                                  style: TextStyle(
+                                    color: Colors.amber.shade800,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ] else ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              'Sin valorar aun',
+                              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -259,6 +289,14 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
                   ),
                   Expanded(
                     child: TextButton.icon(
+                      onPressed: () => _editarValoracion(gasto),
+                      icon: const Icon(Icons.star),
+                      label: Text(gasto.valoracion == null ? 'Valorar' : 'Editar'),
+                      style: TextButton.styleFrom(foregroundColor: Colors.amber.shade700),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextButton.icon(
                       onPressed: () {
                         _historial.eliminarGasto(gasto.id);
                         setState(() {});
@@ -278,9 +316,9 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
                     child: TextButton.icon(
                       onPressed: () {
                         if (esFavorito) {
-                          _historial.eliminarFavorito(gasto.restaurante);
+                          _historial.eliminarFavorito(gasto.restauranteId);
                         } else {
-                          _historial.agregarFavorito(gasto.restaurante);
+                          _historial.agregarFavorito(gasto.restauranteId);
                         }
                         setState(() {});
                       },
@@ -301,8 +339,7 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
   }
 
   Widget _construirPantallaFavoritos() {
-    final favoritos = _historial.obtenerFavoritos();
-    final estadisticas = _historial.obtenerEstadisticas();
+    final favoritos = _historial.obtenerFavoritosConGasto();
 
     if (favoritos.isEmpty) {
       return Center(
@@ -316,7 +353,8 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
             ),
             const SizedBox(height: 16),
             Text(
-              'No hay favoritos',
+              'Aun no tienes favoritos. Marca restaurantes desde Historial con el corazon.',
+              textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[600], fontSize: 16),
             ),
           ],
@@ -328,9 +366,7 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
       padding: const EdgeInsets.all(16),
       itemCount: favoritos.length,
       itemBuilder: (context, index) {
-        final restaurante = favoritos[index];
-        final gastado = estadisticas[restaurante] ?? 0;
-        final gastosDelRestaurante = _historial.obtenerGastos().where((g) => g.restaurante == restaurante).length;
+        final item = favoritos[index];
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -347,16 +383,16 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
                 color: Colors.orange.shade600,
               ),
             ),
-            title: Text(restaurante),
+            title: Text(item.restaurante),
             subtitle: Text(
-              '$gastosDelRestaurante gasto${gastosDelRestaurante > 1 ? 's' : ''} · Total: ${gastado.toStringAsFixed(2)}€',
+              '${item.visitas} gasto${item.visitas > 1 ? 's' : ''} · Total: ${item.gastoTotal.toStringAsFixed(2)}€',
             ),
             trailing: IconButton(
               icon: const Icon(Icons.favorite),
               color: Colors.red,
               onPressed: () {
                 setState(() {
-                  _historial.eliminarFavorito(restaurante);
+                  _historial.eliminarFavorito(item.restauranteId);
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Eliminado de favoritos')),
@@ -366,6 +402,63 @@ class _PantallaHistorialState extends State<PantallaHistorial> with TickerProvid
           ),
         );
       },
+    );
+  }
+
+  Future<void> _editarValoracion(Gasto gasto) async {
+    final valoracion = await Navigator.of(context).push<ValoracionRestaurante>(
+      MaterialPageRoute(
+        builder: (context) => PantallaValorarRestaurante(
+          nombreRestaurante: gasto.restaurante,
+          valoracionInicial: gasto.valoracion,
+          textoBoton: 'Actualizar valoracion',
+        ),
+      ),
+    );
+
+    if (valoracion == null) {
+      return;
+    }
+
+    final actualizado = _historial.actualizarValoracionGasto(
+      gastoId: gasto.id,
+      valoracion: valoracion,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (actualizado) {
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Valoracion actualizada')),
+      );
+    }
+  }
+}
+
+class _EstrellasValoracion extends StatelessWidget {
+  final double valor;
+  final double tamano;
+
+  const _EstrellasValoracion({
+    required this.valor,
+    this.tamano = 16,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final estrellasLlenas = valor.round();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Icon(
+          index < estrellasLlenas ? Icons.star : Icons.star_border,
+          color: Colors.amber,
+          size: tamano,
+        );
+      }),
     );
   }
 }

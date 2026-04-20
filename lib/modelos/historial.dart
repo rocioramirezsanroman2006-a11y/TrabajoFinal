@@ -14,11 +14,13 @@ class PuntoEvolucion {
 }
 
 class RestauranteFrecuencia {
+  final String restauranteId;
   final String restaurante;
   final int visitas;
   final double gastoTotal;
 
   const RestauranteFrecuencia({
+    this.restauranteId = '',
     required this.restaurante,
     required this.visitas,
     required this.gastoTotal,
@@ -35,11 +37,34 @@ class ProductoFrecuencia {
   });
 }
 
+class RestaurantePuntuacion {
+  final String restauranteId;
+  final String nombre;
+  final double puntuacionMedia;
+  final int valoraciones;
+  final int visitas;
+
+  const RestaurantePuntuacion({
+    required this.restauranteId,
+    required this.nombre,
+    required this.puntuacionMedia,
+    required this.valoraciones,
+    required this.visitas,
+  });
+}
+
+enum CriterioRankingValoracion {
+  media,
+  precio,
+  comida,
+  local,
+}
+
 class ServicioHistorial {
   static final ServicioHistorial _instancia = ServicioHistorial._interno();
   
   final List<Gasto> _gastos = [];
-  final List<String> _favoritos = [];
+  final Set<String> _favoritos = {};
   final BaseDatosNube _nube = BaseDatosNube();
   final ServicioAutenticacion _auth = ServicioAutenticacion();
 
@@ -92,25 +117,47 @@ class ServicioHistorial {
     unawaited(_nube.guardarTicket(userId: _usuarioActualId, gasto: gasto));
   }
 
+  bool actualizarValoracionGasto({
+    required String gastoId,
+    required ValoracionRestaurante valoracion,
+  }) {
+    final indice = _gastos.indexWhere((g) => g.id == gastoId);
+    if (indice == -1) {
+      return false;
+    }
+
+    _gastos[indice].valoracion = valoracion;
+    unawaited(_nube.guardarTicket(userId: _usuarioActualId, gasto: _gastos[indice]));
+    return true;
+  }
+
   void eliminarGasto(String id) {
     _gastos.removeWhere((g) => g.id == id);
     unawaited(_nube.eliminarTicket(userId: _usuarioActualId, gastoId: id));
   }
 
-  List<String> obtenerFavoritos() => List.from(_favoritos);
+  List<String> obtenerFavoritos() => _favoritos.toList(growable: false);
 
-  void agregarFavorito(String restaurante) {
-    if (!_favoritos.contains(restaurante)) {
-      _favoritos.add(restaurante);
+  void agregarFavorito(String restauranteId) {
+    _favoritos.add(Gasto.normalizarRestauranteId(restauranteId));
+  }
+
+  void eliminarFavorito(String restauranteId) {
+    _favoritos.remove(Gasto.normalizarRestauranteId(restauranteId));
+  }
+
+  bool esFavorito(String restauranteId) {
+    return _favoritos.contains(Gasto.normalizarRestauranteId(restauranteId));
+  }
+
+  String obtenerNombreRestaurante(String restauranteId) {
+    final idNormalizado = Gasto.normalizarRestauranteId(restauranteId);
+    for (final gasto in _gastos) {
+      if (gasto.restauranteId == idNormalizado) {
+        return gasto.restaurante;
+      }
     }
-  }
-
-  void eliminarFavorito(String restaurante) {
-    _favoritos.remove(restaurante);
-  }
-
-  bool esFavorito(String restaurante) {
-    return _favoritos.contains(restaurante);
+    return restauranteId;
   }
 
   List<String> obtenerRestaurantesUnicos() {
@@ -123,10 +170,18 @@ class ServicioHistorial {
 
   Map<String, double> obtenerEstadisticas() {
     final stats = <String, double>{};
+    final nombres = <String, String>{};
     for (var gasto in _gastos) {
-      stats[gasto.restaurante] = (stats[gasto.restaurante] ?? 0) + gasto.totalGasto;
+      stats[gasto.restauranteId] = (stats[gasto.restauranteId] ?? 0) + gasto.totalGasto;
+      nombres[gasto.restauranteId] = gasto.restaurante;
     }
-    return stats;
+
+    final resultado = <String, double>{};
+    for (final entry in stats.entries) {
+      final nombre = nombres[entry.key] ?? entry.key;
+      resultado[nombre] = entry.value;
+    }
+    return resultado;
   }
 
   List<PuntoEvolucion> obtenerEvolucionSemanal({
@@ -183,15 +238,18 @@ class ServicioHistorial {
   List<RestauranteFrecuencia> obtenerRestaurantesFrecuentes({int limite = 5}) {
     final mapaFrecuencia = <String, int>{};
     final mapaGasto = <String, double>{};
+    final nombres = <String, String>{};
 
     for (final gasto in _gastos) {
-      mapaFrecuencia[gasto.restaurante] = (mapaFrecuencia[gasto.restaurante] ?? 0) + 1;
-      mapaGasto[gasto.restaurante] = (mapaGasto[gasto.restaurante] ?? 0) + gasto.totalGasto;
+      mapaFrecuencia[gasto.restauranteId] = (mapaFrecuencia[gasto.restauranteId] ?? 0) + 1;
+      mapaGasto[gasto.restauranteId] = (mapaGasto[gasto.restauranteId] ?? 0) + gasto.totalGasto;
+      nombres[gasto.restauranteId] = gasto.restaurante;
     }
 
     final lista = mapaFrecuencia.entries
         .map((entry) => RestauranteFrecuencia(
-              restaurante: entry.key,
+              restauranteId: entry.key,
+              restaurante: nombres[entry.key] ?? entry.key,
               visitas: entry.value,
               gastoTotal: mapaGasto[entry.key] ?? 0.0,
             ))
@@ -232,6 +290,125 @@ class ServicioHistorial {
       nombre: masConsumido.key,
       unidades: masConsumido.value,
     );
+  }
+
+  List<RestaurantePuntuacion> obtenerTopRestaurantesPorPuntuacion({
+    int limite = 5,
+    CriterioRankingValoracion criterio = CriterioRankingValoracion.media,
+  }) {
+    final sumaPuntuaciones = <String, double>{};
+    final totalValoraciones = <String, int>{};
+    final totalVisitas = <String, int>{};
+    final nombrePorRestaurante = <String, String>{};
+
+    for (final gasto in _gastos) {
+      final restauranteId = gasto.restauranteId;
+      nombrePorRestaurante[restauranteId] = gasto.restaurante;
+      totalVisitas[restauranteId] = (totalVisitas[restauranteId] ?? 0) + 1;
+
+      if (gasto.valoracion == null) {
+        continue;
+      }
+
+      final valor = switch (criterio) {
+        CriterioRankingValoracion.media => gasto.valoracion!.media,
+        CriterioRankingValoracion.precio => gasto.valoracion!.precio.toDouble(),
+        CriterioRankingValoracion.comida => gasto.valoracion!.comida.toDouble(),
+        CriterioRankingValoracion.local => gasto.valoracion!.local.toDouble(),
+      };
+
+      sumaPuntuaciones[restauranteId] =
+          (sumaPuntuaciones[restauranteId] ?? 0) + valor;
+      totalValoraciones[restauranteId] =
+          (totalValoraciones[restauranteId] ?? 0) + 1;
+    }
+
+    final lista = totalValoraciones.entries.map((entry) {
+      final restauranteId = entry.key;
+      final valoraciones = entry.value;
+      final media = (sumaPuntuaciones[restauranteId] ?? 0) / valoraciones;
+
+      return RestaurantePuntuacion(
+        restauranteId: restauranteId,
+        nombre: nombrePorRestaurante[restauranteId] ?? restauranteId,
+        puntuacionMedia: media,
+        valoraciones: valoraciones,
+        visitas: totalVisitas[restauranteId] ?? valoraciones,
+      );
+    }).toList();
+
+    lista.sort((a, b) {
+      final porPuntuacion = b.puntuacionMedia.compareTo(a.puntuacionMedia);
+      if (porPuntuacion != 0) {
+        return porPuntuacion;
+      }
+
+      final porValoraciones = b.valoraciones.compareTo(a.valoraciones);
+      if (porValoraciones != 0) {
+        return porValoraciones;
+      }
+
+      return b.visitas.compareTo(a.visitas);
+    });
+
+    return lista.take(limite).toList();
+  }
+
+  List<RestauranteFrecuencia> obtenerTopRestaurantesPorGasto({int limite = 3}) {
+    final mapaFrecuencia = <String, int>{};
+    final mapaGasto = <String, double>{};
+    final nombres = <String, String>{};
+
+    for (final gasto in _gastos) {
+      mapaFrecuencia[gasto.restauranteId] = (mapaFrecuencia[gasto.restauranteId] ?? 0) + 1;
+      mapaGasto[gasto.restauranteId] = (mapaGasto[gasto.restauranteId] ?? 0) + gasto.totalGasto;
+      nombres[gasto.restauranteId] = gasto.restaurante;
+    }
+
+    final lista = mapaGasto.entries
+        .map((entry) => RestauranteFrecuencia(
+              restauranteId: entry.key,
+              restaurante: nombres[entry.key] ?? entry.key,
+              visitas: mapaFrecuencia[entry.key] ?? 0,
+              gastoTotal: entry.value,
+            ))
+        .toList();
+
+    lista.sort((a, b) {
+      final porGasto = b.gastoTotal.compareTo(a.gastoTotal);
+      if (porGasto != 0) {
+        return porGasto;
+      }
+      return b.visitas.compareTo(a.visitas);
+    });
+
+    return lista.take(limite).toList();
+  }
+
+  List<RestauranteFrecuencia> obtenerFavoritosConGasto() {
+    final mapaFrecuencia = <String, int>{};
+    final mapaGasto = <String, double>{};
+    final nombres = <String, String>{};
+
+    for (final gasto in _gastos) {
+      if (!_favoritos.contains(gasto.restauranteId)) {
+        continue;
+      }
+      mapaFrecuencia[gasto.restauranteId] =
+          (mapaFrecuencia[gasto.restauranteId] ?? 0) + 1;
+      mapaGasto[gasto.restauranteId] =
+          (mapaGasto[gasto.restauranteId] ?? 0) + gasto.totalGasto;
+      nombres[gasto.restauranteId] = gasto.restaurante;
+    }
+
+    return _favoritos
+        .map((id) => RestauranteFrecuencia(
+              restauranteId: id,
+              restaurante: nombres[id] ?? id,
+              visitas: mapaFrecuencia[id] ?? 0,
+              gastoTotal: mapaGasto[id] ?? 0,
+            ))
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> obtenerTicketsNubeUsuarioActual() {

@@ -3,30 +3,74 @@ import 'participante.dart';
 
 enum ModoGasto { equitativo, proporcional }
 
+class ValoracionRestaurante {
+  final int precio;
+  final int comida;
+  final int local;
+
+  const ValoracionRestaurante({
+    required this.precio,
+    required this.comida,
+    required this.local,
+  });
+
+  double get media => (precio + comida + local) / 3;
+
+  Map<String, dynamic> toMap() {
+    return {
+      'precio': precio,
+      'comida': comida,
+      'local': local,
+      'media': media,
+    };
+  }
+}
+
 class Gasto {
   final String id;
   final String restaurante;
+  final String restauranteId;
   final DateTime fecha;
   final List<Producto> productos;
   final List<Participante> participantes;
   ModoGasto modo;
   final String? notas;
+  ValoracionRestaurante? valoracion;
   late Map<String, double> deudas;
 
   Gasto({
     required this.id,
-    required this.restaurante,
+    required String restaurante,
+    String? restauranteId,
     required this.fecha,
     required this.productos,
     required this.participantes,
     required this.modo,
     this.notas,
-  }) {
+    this.valoracion,
+  })  : restaurante = restaurante.trim(),
+        restauranteId = normalizarRestauranteId(
+          (restauranteId == null || restauranteId.trim().isEmpty)
+              ? restaurante
+              : restauranteId,
+        ) {
     calcularDeudas();
+  }
+
+  static String normalizarRestauranteId(String valor) {
+    return valor.trim().toLowerCase();
   }
 
 
   double get totalGasto => productos.fold(0, (sum, p) => sum + p.precioTotal);
+
+  bool get puedeConfirmarDivision {
+    if (modo != ModoGasto.proporcional) {
+      return true;
+    }
+
+    return productos.every((producto) => producto.estaCompletamenteAsignado());
+  }
 
   Map<String, List<Producto>> obtenerProductosPorParticipante() {
     final mapa = <String, List<Producto>>{};
@@ -86,11 +130,13 @@ class Gasto {
     return {
       'id': id,
       'restaurante': restaurante,
+      'restauranteId': restauranteId,
       'fecha': fecha.toIso8601String(),
       'productos': productos.map((p) => p.toMap()).toList(),
       'participantes': participantes.map((p) => p.toMap()).toList(),
       'modo': modo.toString(),
       'notas': notas,
+      'valoracion': valoracion?.toMap(),
       'deudas': deudas,
     };
   }

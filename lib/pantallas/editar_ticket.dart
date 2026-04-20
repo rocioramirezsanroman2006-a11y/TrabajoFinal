@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../modelos/producto.dart';
 import '../modelos/participante.dart';
 import '../modelos/gasto.dart';
+import '../pantallas/revision_ocr_ticket.dart';
+import '../servicios/ocr_ticket.dart';
+import '../servicios/parser_ticket.dart';
 
 class PantallaEditarTicket extends StatefulWidget {
   final Function(Gasto) onGastoCreado;
+  final ImageSource? origenEscaneoInicial;
 
   const PantallaEditarTicket({
     Key? key,
     required this.onGastoCreado,
+    this.origenEscaneoInicial,
   }) : super(key: key);
 
   @override
@@ -23,6 +29,20 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
 
   List<Producto> _productos = [];
   List<Participante> _participantes = [];
+  final ServicioOcrTicket _servicioOcr = ServicioOcrTicket();
+  bool _escaneando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.origenEscaneoInicial != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _escanearTicket(widget.origenEscaneoInicial!);
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -30,6 +50,7 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
     _controladorProducto.dispose();
     _controladorPrecio.dispose();
     _controladorCantidad.dispose();
+    _servicioOcr.dispose();
     super.dispose();
   }
 
@@ -58,6 +79,30 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
                       ),
                       prefixIcon: const Icon(Icons.restaurant),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _escaneando
+                              ? null
+                              : () => _escanearTicket(ImageSource.camera),
+                          icon: const Icon(Icons.camera_alt_outlined),
+                          label: Text(_escaneando ? 'Escaneando...' : 'Escanear ticket'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _escaneando
+                              ? null
+                              : () => _escanearTicket(ImageSource.gallery),
+                          icon: const Icon(Icons.photo_library_outlined),
+                          label: const Text('Desde galeria'),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 28),
                   const Text(
@@ -320,6 +365,92 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
 
   void _eliminarProducto(int index) => setState(() => _productos.removeAt(index));
 
+  Future<void> _escanearTicket(ImageSource source) async {
+    var fuenteActual = source;
+
+    while (mounted) {
+      final resultado = await _capturarYReconocer(fuenteActual);
+      if (!mounted || resultado == null) {
+        return;
+      }
+
+      if (!resultado.tieneDatos) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se han detectado datos utiles en el ticket.')),
+        );
+        return;
+      }
+
+      final accion = await Navigator.of(context).push<ResultadoRevisionOcr>(
+        MaterialPageRoute(
+          builder: (_) => PantallaRevisionOcrTicket(resultado: resultado),
+        ),
+      );
+
+      if (!mounted || accion == null) {
+        return;
+      }
+
+      if (accion.repetirFuente != null) {
+        fuenteActual = accion.repetirFuente!;
+        continue;
+      }
+
+      final confirmados = accion.datosConfirmados;
+      if (confirmados == null) {
+        return;
+      }
+
+      _aplicarResultadoOcr(confirmados);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Datos aplicados: ${confirmados.productos.length} producto(s).',
+          ),
+        ),
+      );
+      return;
+    }
+  }
+
+  Future<ResultadoParseTicket?> _capturarYReconocer(ImageSource source) async {
+    setState(() {
+      _escaneando = true;
+    });
+
+    final resultado = source == ImageSource.camera
+        ? await _servicioOcr.escanearDesdeCamara()
+        : await _servicioOcr.escanearDesdeGaleria();
+
+    if (mounted) {
+      setState(() {
+        _escaneando = false;
+      });
+    }
+
+    return resultado;
+  }
+
+  void _aplicarResultadoOcr(ResultadoParseTicket resultado) {
+    setState(() {
+      if (resultado.restauranteDetectado != null &&
+          resultado.restauranteDetectado!.trim().isNotEmpty) {
+        _controladorRestaurante.text = resultado.restauranteDetectado!.trim();
+      }
+
+      _productos = resultado.productos.asMap().entries.map((entry) {
+        final i = entry.key;
+        final detectado = entry.value;
+        return Producto(
+          id: '${DateTime.now().microsecondsSinceEpoch}-$i',
+          nombre: detectado.nombre,
+          precio: detectado.precio,
+          cantidad: detectado.cantidad,
+        );
+      }).toList();
+    });
+  }
+
   void _crearGasto() {
     if (_controladorRestaurante.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ingresa el restaurante')));
@@ -347,9 +478,13 @@ class _PantallaEditarTicketState extends State<PantallaEditarTicket> {
       );
     }).toList();
 
+    final restauranteNombre = _controladorRestaurante.text.trim();
+    final restauranteId = Gasto.normalizarRestauranteId(restauranteNombre);
+
     final gasto = Gasto(
       id: DateTime.now().toString(),
-      restaurante: _controladorRestaurante.text,
+      restaurante: restauranteNombre,
+      restauranteId: restauranteId,
       fecha: DateTime.now(),
       productos: productosConAsignaciones,
       participantes: _participantes,

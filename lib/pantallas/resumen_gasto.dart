@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../modelos/gasto.dart';
 import '../modelos/historial.dart';
+import 'valorar_restaurante.dart';
 
 class PantallaResumenGasto extends StatefulWidget {
   final Gasto gasto;
@@ -185,27 +186,7 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _guardando
-                      ? null
-                      : () {
-                          if (widget.esSoloLectura) {
-                            Navigator.of(context).pop();
-                            return;
-                          }
-
-                          setState(() {
-                            _guardando = true;
-                          });
-
-                          ServicioHistorial().agregarGasto(widget.gasto);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('✓ Gasto guardado correctamente'), backgroundColor: Colors.green),
-                          );
-                          Future.delayed(const Duration(seconds: 1), () {
-                            if (!mounted) return;
-                            Navigator.of(context).popUntil((route) => route.isFirst);
-                          });
-                        },
+                  onPressed: _guardando ? null : _finalizarTicket,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: Colors.blue.shade600,
@@ -223,6 +204,49 @@ class _PantallaResumenGastoState extends State<PantallaResumenGasto> {
         ),
       ),
     );
+  }
+
+  Future<void> _finalizarTicket() async {
+    if (widget.esSoloLectura) {
+      Navigator.of(context).pop();
+      return;
+    }
+
+    setState(() {
+      _guardando = true;
+    });
+
+    final valoracion = await Navigator.of(context).push<ValoracionRestaurante>(
+      MaterialPageRoute(
+        builder: (context) => PantallaValorarRestaurante(
+          nombreRestaurante: widget.gasto.restaurante,
+        ),
+      ),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (valoracion == null) {
+      setState(() {
+        _guardando = false;
+      });
+      return;
+    }
+
+    widget.gasto.valoracion = valoracion;
+    ServicioHistorial().agregarGasto(widget.gasto);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('✓ Gasto guardado correctamente'), backgroundColor: Colors.green),
+    );
+
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    });
   }
 
   Future<void> _compartirPorWhatsApp() async {

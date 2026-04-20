@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../app_navigation_observer.dart';
 import '../modelos/historial.dart';
 import '../modelos/gasto.dart';
 import 'ajustes.dart';
@@ -17,7 +18,7 @@ class PantallaInicio extends StatefulWidget {
   State<PantallaInicio> createState() => _PantallaInicioState();
 }
 
-class _PantallaInicioState extends State<PantallaInicio> {
+class _PantallaInicioState extends State<PantallaInicio> with RouteAware {
   late ServicioHistorial _historial;
 
   @override
@@ -32,12 +33,33 @@ class _PantallaInicioState extends State<PantallaInicio> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    // Al volver desde crear/dividir/resumen, refrescamos los datos de inicio.
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final gastoSemanal = _historial.obtenerGastoSemanalTotal();
     final gastosRecientes = _historial.obtenerGastos().take(4).toList();
 
-    // Simulación de datos de gasto semanal para el gráfico
-    final List<double> datosGastoSemana = _historial.obtenerGastoPorDiaSemana();
+    // En la tarjeta de inicio mostramos la semana invertida para priorizar lo más reciente.
+    final datosGastoSemana = _historial.obtenerGastoPorDiaSemana().reversed.toList();
 
     return Scaffold(
       appBar: AppBar(

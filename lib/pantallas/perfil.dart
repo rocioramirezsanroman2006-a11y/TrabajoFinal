@@ -19,6 +19,7 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
   late TextEditingController _nombreController;
   late TextEditingController _emailController;
   bool _enEdicion = false;
+  CriterioRankingValoracion _criterioRanking = CriterioRankingValoracion.media;
 
   @override
   void initState() {
@@ -40,7 +41,11 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
   Widget build(BuildContext context) {
     final gastoTotal = _historial.obtenerGastoTotal();
     final gastoSemanal = _historial.obtenerGastoSemanalTotal();
-    final estadisticas = _historial.obtenerEstadisticas();
+    final topPuntuados = _historial.obtenerTopRestaurantesPorPuntuacion(
+      limite: 5,
+      criterio: _criterioRanking,
+    );
+    final topGastados = _historial.obtenerTopRestaurantesPorGasto(limite: 3);
 
     return Scaffold(
       appBar: AppBar(
@@ -230,17 +235,42 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
             ),
             const SizedBox(height: 24),
 
-            // Restaurantes preferidos
-            const Text(
-              'Restaurantes Favoritos',
-              style: TextStyle(
+            // Restaurantes favoritos por puntuacion
+            Text(
+              'Restaurantes favoritos por ${_etiquetaCriterio(_criterioRanking)}',
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: CriterioRankingValoracion.values.map((criterio) {
+                return ChoiceChip(
+                  label: Text(_etiquetaCriterio(criterio)),
+                  selected: _criterioRanking == criterio,
+                  onSelected: (_) {
+                    setState(() {
+                      _criterioRanking = criterio;
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Ranking actual: ${_etiquetaCriterio(_criterioRanking)}',
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 12),
 
-            if (estadisticas.isEmpty)
+            if (topPuntuados.isEmpty)
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 40),
@@ -252,8 +282,8 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                         color: Colors.grey[300],
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        'Aún no hay datos',
+                       Text(
+                         'Aun no tienes valoraciones para este ranking. Finaliza un ticket para empezar.',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14,
@@ -267,13 +297,9 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: estadisticas.length,
+                  itemCount: topPuntuados.length,
                 itemBuilder: (context, index) {
-                  final entries = estadisticas.entries.toList();
-                  entries.sort((a, b) => b.value.compareTo(a.value));
-                  
-                  final restaurante = entries[index].key;
-                  final gastado = entries[index].value;
+                    final item = topPuntuados[index];
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
@@ -290,31 +316,68 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
                           color: Colors.amber.shade600,
                         ),
                       ),
-                      title: Text(restaurante),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          _historial.eliminarFavorito(restaurante);
-                          setState(() {});
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('$restaurante eliminado de favoritos'),
-                              duration: const Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                      ),
-                      subtitle: Text(
-                        '${gastado.toStringAsFixed(2)}€',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
+                       title: Text(item.nombre),
+                       trailing: Container(
+                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                         decoration: BoxDecoration(
+                           color: Colors.amber.shade50,
+                           borderRadius: BorderRadius.circular(8),
+                         ),
+                         child: Text(
+                           item.puntuacionMedia.toStringAsFixed(1),
+                           style: TextStyle(
+                             fontWeight: FontWeight.bold,
+                             color: Colors.amber.shade800,
+                           ),
+                         ),
+                       ),
+                       subtitle: Row(
+                         children: [
+                           _EstrellasValoracion(valor: item.puntuacionMedia, tamano: 14),
+                           const SizedBox(width: 6),
+                           Text(
+                             '(${item.valoraciones} valoraciones)',
+                             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                           ),
+                         ],
+                       ),
                     ),
                   );
                 },
               ),
+            const SizedBox(height: 24),
+
+            const Text(
+              'Top 3 donde mas has gastado',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            if (topGastados.isEmpty)
+              Text(
+                'Aun no hay datos de gasto. Crea y finaliza tickets para ver este top 3.',
+                style: TextStyle(color: Colors.grey[600]),
+              )
+            else
+              ...topGastados.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.blue.shade50,
+                      child: Text('${index + 1}'),
+                    ),
+                    title: Text(item.restaurante),
+                    subtitle: Text('${item.visitas} visita${item.visitas == 1 ? '' : 's'}'),
+                    trailing: Text(
+                      '${item.gastoTotal.toStringAsFixed(2)}€',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                );
+              }),
+
             const SizedBox(height: 24),
 
             if (widget.onCerrarSesion != null)
@@ -338,6 +401,44 @@ class _PantallaPerfilState extends State<PantallaPerfil> {
           ],
         ),
       ),
+    );
+  }
+
+  String _etiquetaCriterio(CriterioRankingValoracion criterio) {
+    switch (criterio) {
+      case CriterioRankingValoracion.media:
+        return 'Media';
+      case CriterioRankingValoracion.precio:
+        return 'Precio';
+      case CriterioRankingValoracion.comida:
+        return 'Comida';
+      case CriterioRankingValoracion.local:
+        return 'Local';
+    }
+  }
+}
+
+class _EstrellasValoracion extends StatelessWidget {
+  final double valor;
+  final double tamano;
+
+  const _EstrellasValoracion({
+    required this.valor,
+    this.tamano = 16,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final estrellasLlenas = valor.round();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        return Icon(
+          index < estrellasLlenas ? Icons.star : Icons.star_border,
+          color: Colors.amber,
+          size: tamano,
+        );
+      }),
     );
   }
 }
