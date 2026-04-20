@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../modelos/historial.dart';
 import '../modelos/gasto.dart';
 import 'ajustes.dart';
@@ -33,7 +34,10 @@ class _PantallaInicioState extends State<PantallaInicio> {
   @override
   Widget build(BuildContext context) {
     final gastoSemanal = _historial.obtenerGastoSemanalTotal();
-    final gastosRecientes = _historial.obtenerGastos();
+    final gastosRecientes = _historial.obtenerGastos().take(4).toList();
+
+    // Simulación de datos de gasto semanal para el gráfico
+    final List<double> datosGastoSemana = _historial.obtenerGastoPorDiaSemana();
 
     return Scaffold(
       appBar: AppBar(
@@ -61,7 +65,7 @@ class _PantallaInicioState extends State<PantallaInicio> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Tarjeta de gasto semanal
+              // Tarjeta de gasto semanal con gráfico
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
@@ -82,8 +86,32 @@ class _PantallaInicioState extends State<PantallaInicio> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '${gastoSemanal.toStringAsFixed(2)}€',
+                      '${gastoSemanal.toStringAsFixed(2)}\u20ac',
                       style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 80,
+                      child: LineChart(
+                        LineChartData(
+                          gridData: FlGridData(show: false),
+                          titlesData: FlTitlesData(show: false),
+                          borderData: FlBorderData(show: false),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: List.generate(
+                                datosGastoSemana.length,
+                                (i) => FlSpot(i.toDouble(), datosGastoSemana[i]),
+                              ),
+                              isCurved: true,
+                              color: Colors.white,
+                              barWidth: 3,
+                              dotData: FlDotData(show: false),
+                              belowBarData: BarAreaData(show: false),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Container(

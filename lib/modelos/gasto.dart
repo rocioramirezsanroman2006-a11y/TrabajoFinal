@@ -25,25 +25,21 @@ class Gasto {
     calcularDeudas();
   }
 
+
   double get totalGasto => productos.fold(0, (sum, p) => sum + p.precioTotal);
 
-  // Obtener qué consumió cada participante
   Map<String, List<Producto>> obtenerProductosPorParticipante() {
     final mapa = <String, List<Producto>>{};
-
     for (var participante in participantes) {
       mapa[participante.id] = [];
     }
-
     for (var producto in productos) {
-      // Usamos el getter participantesSeleccionados que creamos en el modelo Producto
       for (var participanteId in producto.participantesSeleccionados) {
         if (mapa[participanteId] != null) {
           mapa[participanteId]!.add(producto);
         }
       }
     }
-
     return mapa;
   }
 
@@ -98,4 +94,5 @@ class Gasto {
       'deudas': deudas,
     };
   }
-}
+ }
+  

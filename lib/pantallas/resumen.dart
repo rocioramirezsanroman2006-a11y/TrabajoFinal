@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:share_plus/share_plus.dart';
+// import 'package:share_plus/share_plus.dart';
 import '../modelos/gasto.dart';
 import '../modelos/historial.dart';
 import '../servicios/division.dart' show ServicioDivision, Pago;
@@ -11,11 +11,11 @@ class PantallaResumen extends StatefulWidget {
   final bool esSoloLectura;
 
   const PantallaResumen({
-    Key? key,
+    super.key,
     required this.gasto,
     required this.onGastoFinalizado,
     this.esSoloLectura = false, // Por defecto es falso para que el flujo normal no cambie
-  }) : super(key: key);
+  });
 
   @override
   State<PantallaResumen> createState() => _PantallaResumenState();

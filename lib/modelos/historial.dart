@@ -66,6 +66,25 @@ class ServicioHistorial {
     return obtenerGastosDeEstaSemana().fold(0, (sum, gasto) => sum + gasto.totalGasto);
   }
 
+  List<double> obtenerGastoPorDiaSemana({DateTime? fechaReferencia}) {
+    final referencia = _normalizarFecha(fechaReferencia ?? DateTime.now());
+    final inicioSemana = _inicioDeSemana(referencia);
+    final finSemanaExclusivo = inicioSemana.add(const Duration(days: 7));
+    final totales = List<double>.filled(7, 0.0);
+
+    for (final gasto in _gastos) {
+      final fecha = _normalizarFecha(gasto.fecha);
+      if (fecha.isBefore(inicioSemana) || !fecha.isBefore(finSemanaExclusivo)) {
+        continue;
+      }
+
+      final indice = fecha.weekday - 1; // 0=lunes, 6=domingo
+      totales[indice] += gasto.totalGasto;
+    }
+
+    return totales;
+  }
+
   void agregarGasto(Gasto gasto) {
     final yaExiste = _gastos.any((g) => g.id == gasto.id);
     if (yaExiste) return;
