@@ -7,6 +7,13 @@ class Participante {
     required this.nombre,
   });
 
+  static Participante fromMap(Map<String, dynamic> mapa) {
+    return Participante(
+      id: mapa['id']?.toString() ?? '',
+      nombre: mapa['nombre']?.toString() ?? '',
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

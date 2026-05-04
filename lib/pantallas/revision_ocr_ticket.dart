@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../servicios/parser_ticket.dart';
+import '../servicios/api_service.dart';
+import '../modelos/gasto.dart';
+import '../modelos/producto.dart';
 
 class ResultadoRevisionOcr {
   final ResultadoParseTicket? datosConfirmados;
@@ -37,6 +40,7 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
   late final TextEditingController _restauranteController;
   final List<_ProductoEditable> _productos = [];
   final ScrollController _scrollController = ScrollController();
+  final ApiService _apiService = ApiService(); // Instanciamos el servicio
 
   @override
   void initState() {
@@ -63,12 +67,12 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
   Widget build(BuildContext context) {
     final totalCalculado = _productos.fold<double>(
       0,
-      (sum, p) => sum + (p.precioValor * p.cantidadValor),
+          (sum, p) => sum + (p.precioValor * p.cantidadValor),
     );
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Revision OCR'),
+        title: const Text('Revisión OCR'),
       ),
       body: Column(
         children: [
@@ -102,7 +106,7 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
                       TextButton.icon(
                         onPressed: _agregarProductoVacio,
                         icon: const Icon(Icons.add),
-                        label: const Text('Anadir'),
+                        label: const Text('Añadir'),
                       ),
                     ],
                   ),
@@ -115,7 +119,7 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
                         color: Colors.orange.shade50,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text('No se detectaron productos. Puedes anadirlos manualmente.'),
+                      child: const Text('No se detectaron productos. Puedes añadirlos manualmente.'),
                     )
                   else
                     ..._productos.asMap().entries.map((entry) {
@@ -163,7 +167,7 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
                             );
                           },
                           icon: const Icon(Icons.camera_alt_outlined),
-                          label: const Text('Repetir camara'),
+                          label: const Text('Repetir cámara'),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -175,7 +179,7 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
                             );
                           },
                           icon: const Icon(Icons.photo_library_outlined),
-                          label: const Text('Repetir galeria'),
+                          label: const Text('Repetir galería'),
                         ),
                       ),
                     ],
@@ -184,8 +188,8 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: _confirmar,
-                      child: const Text('Usar datos'),
+                      onPressed: _confirmarYGuardar,
+                      child: const Text('Usar y Guardar datos'),
                     ),
                   ),
                 ],
@@ -256,10 +260,7 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) {
-        return;
-      }
-
+      if (!mounted || !_scrollController.hasClients) return;
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
@@ -268,46 +269,98 @@ class _PantallaRevisionOcrTicketState extends State<PantallaRevisionOcrTicket> {
     });
   }
 
-  void _confirmar() {
-    final productos = <ProductoDetectadoTicket>[];
+  void _confirmarYGuardar() async {
+    // 1. Esta lista usa la clase que acabas de pasarme del Parser
+    final listaOcrConfirmada = <ProductoDetectadoTicket>[];
+
+    // 2. Esta lista usa tu clase oficial para la base de datos
+    final listaParaBaseDatos = <Producto>[];
 
     for (final item in _productos) {
-      final nombre = item.nombre.text.trim();
-      final cantidad = int.tryParse(item.cantidad.text.trim()) ?? 1;
-      final precio = double.tryParse(item.precio.text.replaceAll(',', '.').trim());
+      final nombreStr = item.nombre.text.trim();
+      final cantidadInt = int.tryParse(item.cantidad.text.trim()) ?? 1;
+      final precioDb = double.tryParse(item.precio.text.replaceAll(',', '.').trim());
 
-      if (nombre.isEmpty || precio == null || precio <= 0) {
-        continue;
-      }
+      if (nombreStr.isEmpty || precioDb == null || precioDb <= 0) continue;
 
-      productos.add(
+      // Guardamos para el resultado del OCR (lo que espera el Parser)
+      listaOcrConfirmada.add(
         ProductoDetectadoTicket(
-          nombre: nombre,
-          cantidad: cantidad <= 0 ? 1 : cantidad,
-          precio: precio,
+            nombre: nombreStr,
+            precio: precioDb,
+            cantidad: cantidadInt
+        ),
+      );
+
+      // Guardamos para tu modelo Gasto (lo que va a MongoDB)
+      listaParaBaseDatos.add(
+        Producto(
+          id: DateTime.now().microsecondsSinceEpoch.toString() + nombreStr,
+          nombre: nombreStr,
+          precio: precioDb,
+          cantidad: cantidadInt,
+          asignacionesProporcionales: {}, // Mapa vacío obligatorio
         ),
       );
     }
 
-    if (productos.isEmpty) {
+    if (listaOcrConfirmada.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Debes tener al menos un producto valido.')),
+        const SnackBar(content: Text('Debes tener al menos un producto válido.')),
       );
       return;
     }
 
-    final total = productos.fold<double>(0, (sum, p) => sum + (p.precio * p.cantidad));
-
-    final datos = ResultadoParseTicket(
-      restauranteDetectado: _restauranteController.text.trim().isEmpty
-          ? null
-          : _restauranteController.text.trim(),
-      productos: productos,
-      totalDetectado: total,
-      lineas: widget.resultado.lineas,
+    // Mostrar rueda de carga
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
 
-    Navigator.of(context).pop(ResultadoRevisionOcr.confirmar(datos));
+    try {
+      // Creamos el Gasto oficial
+      final nuevoGasto = Gasto(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        restaurante: _restauranteController.text.trim().isEmpty
+            ? "Restaurante Desconocido"
+            : _restauranteController.text.trim(),
+        fecha: DateTime.now(),
+        productos: listaParaBaseDatos,
+        participantes: [],
+        modo: ModoGasto.equitativo,
+      );
+
+      // Enviar al Backend (Node.js)
+      bool exito = await _apiService.guardarGastoEnNube(
+        userId: "usuario_demo_1",
+        gasto: nuevoGasto,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Cerramos el cargando
+
+      if (exito) {
+        final totalFinal = listaOcrConfirmada.fold<double>(0, (sum, p) => sum + (p.precio * p.cantidad));
+
+        final resultadoFinal = ResultadoParseTicket(
+          restauranteDetectado: nuevoGasto.restaurante,
+          productos: listaOcrConfirmada,
+          totalDetectado: totalFinal,
+          lineas: widget.resultado.lineas,
+        );
+
+        // Volvemos a la pantalla anterior con el éxito
+        Navigator.of(context).pop(ResultadoRevisionOcr.confirmar(resultadoFinal));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al guardar en MongoDB. ¿Servidor encendido?')),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      print("Error detallado: $e");
+    }
   }
 }
 
@@ -345,9 +398,5 @@ class _ProductoEditable {
   }
 
   int get cantidadValor => int.tryParse(cantidad.text.trim()) ?? 1;
-
-  double get precioValor =>
-      double.tryParse(precio.text.replaceAll(',', '.').trim()) ?? 0;
+  double get precioValor => double.tryParse(precio.text.replaceAll(',', '.').trim()) ?? 0;
 }
-
-

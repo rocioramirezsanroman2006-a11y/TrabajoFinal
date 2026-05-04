@@ -1,3 +1,5 @@
+import 'api_service.dart';
+
 class UsuarioAutenticado {
   final String email;
   final String nombre;
@@ -18,38 +20,51 @@ class ServicioAutenticacion {
   ServicioAutenticacion._interno();
 
   UsuarioAutenticado? _usuarioActual;
+  final ApiService _api = ApiService();
 
   UsuarioAutenticado? get usuarioActual => _usuarioActual;
 
   bool get estaAutenticado => _usuarioActual != null;
-
-  final Map<String, String> _credenciales = const {
-    'user@gmail.com': '12345678',
-    'admin@gmail.com': '12345678',
-  };
 
   Future<bool> iniciarSesion({
     required String email,
     required String password,
   }) async {
     final emailNormalizado = email.trim().toLowerCase();
-    final passwordGuardado = _credenciales[emailNormalizado];
+    final data = await _api.iniciarSesion(
+      email: emailNormalizado,
+      password: password,
+    );
 
-    if (passwordGuardado == null || passwordGuardado != password) {
+    if (data == null) {
       return false;
     }
 
     _usuarioActual = UsuarioAutenticado(
-      email: emailNormalizado,
-      nombre: emailNormalizado == 'admin@gmail.com' ? 'Administrador' : 'Usuario',
-      esAdmin: emailNormalizado == 'admin@gmail.com',
+      email: (data['email']?.toString() ?? emailNormalizado).trim().toLowerCase(),
+      nombre: data['nombre']?.toString() ?? 'Usuario',
+      esAdmin: data['esAdmin'] == true,
     );
 
     return true;
+  }
+
+  Future<bool> registrarUsuario({
+    required String email,
+    required String password,
+    String? nombre,
+  }) async {
+    final emailNormalizado = email.trim().toLowerCase();
+    final data = await _api.registrarUsuario(
+      email: emailNormalizado,
+      password: password,
+      nombre: nombre,
+    );
+
+    return data != null;
   }
 
   void cerrarSesion() {
     _usuarioActual = null;
   }
 }
-

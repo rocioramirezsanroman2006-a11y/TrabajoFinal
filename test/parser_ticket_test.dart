@@ -202,6 +202,87 @@ Total: 218,55
       expect(resultado.productos[1].cantidad, 1);
       expect(resultado.totalDetectado, 218.55);
     });
+
+    test('detecta cantidad cuando va al inicio sin x', () {
+      const texto = '''
+BAR RIOS
+2 Cafe 1,50
+TOTAL 3,00
+''';
+
+      final resultado = ParserTicket.parsearTexto(texto);
+
+      expect(resultado.productos, hasLength(1));
+      expect(resultado.productos.first.nombre, 'Cafe');
+      expect(resultado.productos.first.cantidad, 2);
+      expect(resultado.productos.first.precio, 1.50);
+    });
+
+    test('detecta nombre con numeros en lineas separadas', () {
+      const texto = '''
+BAR CENTRAL
+PLATO COMBINADO N6
+8,50
+TOTAL 8,50
+''';
+
+      final resultado = ParserTicket.parsearTexto(texto);
+
+      expect(resultado.productos, hasLength(1));
+      expect(resultado.productos.first.nombre, 'PLATO COMBINADO N6');
+      expect(resultado.productos.first.precio, 8.50);
+    });
+
+    test('prioriza bloque entre separadores de guiones', () {
+      const texto = '''
+RESTAURANTE ORO
+--------------------
+ENTRADAS
+--------------------
+1 Ensalada 5,00
+2 Agua 1,50 3,00
+--------------------
+TOTAL 8,00
+Gracias por su visita
+''';
+
+      final resultado = ParserTicket.parsearTexto(texto);
+
+      expect(resultado.productos, hasLength(2));
+      expect(resultado.productos[0].nombre, 'Ensalada');
+      expect(resultado.productos[0].cantidad, 1);
+      expect(resultado.productos[1].nombre, 'Agua');
+      expect(resultado.productos[1].cantidad, 2);
+    });
+
+    test('detecta cantidad cuando va pegada al nombre', () {
+      const texto = '''
+BAR RIOS
+2Cafe 1,50
+TOTAL 3,00
+''';
+
+      final resultado = ParserTicket.parsearTexto(texto);
+
+      expect(resultado.productos, hasLength(1));
+      expect(resultado.productos.first.nombre, 'Cafe');
+      expect(resultado.productos.first.cantidad, 2);
+      expect(resultado.productos.first.precio, 1.50);
+    });
+
+    test('toma el precio minimo si la linea de precios tiene varios', () {
+      const texto = '''
+BAR CENTRAL
+PAELLA DE MARISCO
+17,95 143,60
+TOTAL 143,60
+''';
+
+      final resultado = ParserTicket.parsearTexto(texto);
+
+      expect(resultado.productos, hasLength(1));
+      expect(resultado.productos.first.nombre, 'PAELLA DE MARISCO');
+      expect(resultado.productos.first.precio, 17.95);
+    });
   });
 }
-

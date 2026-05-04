@@ -8,6 +8,7 @@ import 'pantallas/historial.dart';
 import 'pantallas/perfil.dart';
 import 'pantallas/login.dart';
 import 'modelos/gasto.dart';
+import 'modelos/historial.dart';
 import 'servicios/autenticacion.dart';
 
 void main() {
@@ -80,6 +81,7 @@ class _AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<_AuthGate> {
   final ServicioAutenticacion _auth = ServicioAutenticacion();
+  final ServicioHistorial _historial = ServicioHistorial();
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +98,7 @@ class _AuthGateState extends State<_AuthGate> {
 
   void _cerrarSesion() {
     _auth.cerrarSesion();
+    _historial.limpiarSesion();
     setState(() {});
   }
 }
@@ -118,6 +121,7 @@ class _PantallaNavegacionPrincipalState
   int _indiceSeleccionado = 0;
 
   late final List<Widget> _pantallas;
+  final ServicioHistorial _historial = ServicioHistorial();
 
   @override
   void initState() {
@@ -127,6 +131,15 @@ class _PantallaNavegacionPrincipalState
       const PantallaHistorial(),
       PantallaPerfil(onCerrarSesion: widget.onCerrarSesion),
     ];
+
+    _sincronizarTickets();
+  }
+
+  Future<void> _sincronizarTickets() async {
+    await _historial.sincronizarDesdeNube();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override

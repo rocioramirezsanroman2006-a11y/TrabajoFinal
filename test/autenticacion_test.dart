@@ -20,16 +20,6 @@ void main() {
       expect(auth.usuarioActual?.esAdmin, isFalse);
     });
 
-    test('permite login de admin@gmail.com', () async {
-      final acceso = await auth.iniciarSesion(
-        email: 'admin@gmail.com',
-        password: '12345678',
-      );
-
-      expect(acceso, isTrue);
-      expect(auth.usuarioActual?.esAdmin, isTrue);
-    });
-
     test('rechaza credenciales incorrectas', () async {
       final acceso = await auth.iniciarSesion(
         email: 'user@gmail.com',
@@ -41,5 +31,3 @@ void main() {
     });
   });
 }
-
-

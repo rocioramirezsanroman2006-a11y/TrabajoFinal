@@ -76,6 +76,30 @@ class ServicioHistorial {
 
   List<Gasto> obtenerGastos() => List.from(_gastos);
   
+  Future<void> sincronizarDesdeNube() async {
+    final tickets = await _nube.obtenerTickets(_usuarioActualId);
+    final gastos = tickets
+        .whereType<Map<String, dynamic>>()
+        .map((ticket) {
+          final map = Map<String, dynamic>.from(ticket);
+          map.remove('userId');
+          return Gasto.fromMap(map);
+        })
+        .where((gasto) => gasto.id.isNotEmpty)
+        .toList();
+
+    gastos.sort((a, b) => b.fecha.compareTo(a.fecha));
+
+    _gastos
+      ..clear()
+      ..addAll(gastos);
+  }
+
+  void limpiarSesion() {
+    _gastos.clear();
+    _favoritos.clear();
+  }
+
   List<Gasto> obtenerGastosDeEstaSemana() {
     final hoy = DateTime.now();
     final hace7Dias = hoy.subtract(Duration(days: 7));

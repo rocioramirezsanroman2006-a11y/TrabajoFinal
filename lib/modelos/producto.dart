@@ -16,6 +16,29 @@ class Producto {
     Map<String, double>? asignacionesProporcionales,
   }) : asignacionesProporcionales = asignacionesProporcionales ?? {};
 
+  static Producto fromMap(Map<String, dynamic> mapa) {
+    final asignaciones = <String, double>{};
+    final rawAsignaciones = mapa['asignacionesProporcionales'];
+    if (rawAsignaciones is Map) {
+      rawAsignaciones.forEach((key, value) {
+        final cantidad = value is num ? value.toDouble() : double.tryParse('$value') ?? 0.0;
+        asignaciones[key.toString()] = cantidad;
+      });
+    }
+
+    return Producto(
+      id: mapa['id']?.toString() ?? '',
+      nombre: mapa['nombre']?.toString() ?? '',
+      precio: (mapa['precio'] is num)
+          ? (mapa['precio'] as num).toDouble()
+          : double.tryParse('${mapa['precio']}') ?? 0.0,
+      cantidad: (mapa['cantidad'] is num)
+          ? (mapa['cantidad'] as num).round()
+          : int.tryParse('${mapa['cantidad']}') ?? 1,
+      asignacionesProporcionales: asignaciones,
+    );
+  }
+
   double get precioTotal => precio * cantidad;
 
   double get totalAsignado =>

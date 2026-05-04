@@ -24,6 +24,25 @@ class ValoracionRestaurante {
       'media': media,
     };
   }
+
+  static ValoracionRestaurante? fromMap(Map<String, dynamic>? mapa) {
+    if (mapa == null) return null;
+    final precio = (mapa['precio'] is num)
+        ? (mapa['precio'] as num).toInt()
+        : int.tryParse('${mapa['precio']}') ?? 0;
+    final comida = (mapa['comida'] is num)
+        ? (mapa['comida'] as num).toInt()
+        : int.tryParse('${mapa['comida']}') ?? 0;
+    final local = (mapa['local'] is num)
+        ? (mapa['local'] as num).toInt()
+        : int.tryParse('${mapa['local']}') ?? 0;
+
+    return ValoracionRestaurante(
+      precio: precio,
+      comida: comida,
+      local: local,
+    );
+  }
 }
 
 class Gasto {
@@ -61,6 +80,62 @@ class Gasto {
     return valor.trim().toLowerCase();
   }
 
+  static ModoGasto _modoDesde(dynamic valor) {
+    final texto = valor?.toString().toLowerCase() ?? '';
+    if (texto.contains('proporcional')) {
+      return ModoGasto.proporcional;
+    }
+    return ModoGasto.equitativo;
+  }
+
+  static DateTime _fechaDesde(dynamic valor) {
+    if (valor is DateTime) return valor;
+    if (valor is String) {
+      return DateTime.tryParse(valor) ?? DateTime.now();
+    }
+    return DateTime.now();
+  }
+
+  static Gasto fromMap(Map<String, dynamic> mapa) {
+    final productos = (mapa['productos'] as List?)
+            ?.whereType<Map>()
+            .map((p) => Producto.fromMap(Map<String, dynamic>.from(p)))
+            .toList() ??
+        [];
+    final participantes = (mapa['participantes'] as List?)
+            ?.whereType<Map>()
+            .map((p) => Participante.fromMap(Map<String, dynamic>.from(p)))
+            .toList() ??
+        [];
+
+    final valoracion = mapa['valoracion'] is Map
+        ? ValoracionRestaurante.fromMap(
+            Map<String, dynamic>.from(mapa['valoracion'] as Map),
+          )
+        : null;
+
+    final gasto = Gasto(
+      id: mapa['id']?.toString() ?? '',
+      restaurante: mapa['restaurante']?.toString() ?? '',
+      restauranteId: mapa['restauranteId']?.toString(),
+      fecha: _fechaDesde(mapa['fecha']),
+      productos: productos,
+      participantes: participantes,
+      modo: _modoDesde(mapa['modo']),
+      notas: mapa['notas']?.toString(),
+      valoracion: valoracion,
+    );
+
+    final deudasRaw = mapa['deudas'];
+    if (deudasRaw is Map) {
+      gasto.deudas = deudasRaw.map((key, value) {
+        final cantidad = value is num ? value.toDouble() : double.tryParse('$value') ?? 0.0;
+        return MapEntry(key.toString(), cantidad);
+      });
+    }
+
+    return gasto;
+  }
 
   double get totalGasto => productos.fold(0, (sum, p) => sum + p.precioTotal);
 
@@ -132,6 +207,7 @@ class Gasto {
       'restaurante': restaurante,
       'restauranteId': restauranteId,
       'fecha': fecha.toIso8601String(),
+      'totalGasto': totalGasto,
       'productos': productos.map((p) => p.toMap()).toList(),
       'participantes': participantes.map((p) => p.toMap()).toList(),
       'modo': modo.toString(),
@@ -140,5 +216,4 @@ class Gasto {
       'deudas': deudas,
     };
   }
- }
-  
+}

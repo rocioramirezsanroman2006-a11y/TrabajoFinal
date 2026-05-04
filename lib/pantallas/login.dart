@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../servicios/autenticacion.dart';
+import 'registro.dart';
 
 class PantallaLogin extends StatefulWidget {
   final VoidCallback onLoginExitoso;
@@ -116,7 +117,12 @@ class _PantallaLoginState extends State<PantallaLogin> {
                                   : const Text('Entrar'),
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 6),
+                          TextButton(
+                            onPressed: _cargando ? null : _irARegistro,
+                            child: const Text('Crear cuenta'),
+                          ),
+                          const SizedBox(height: 8),
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -129,7 +135,6 @@ class _PantallaLoginState extends State<PantallaLogin> {
                                 Text('Usuarios de prueba', style: TextStyle(fontWeight: FontWeight.bold)),
                                 SizedBox(height: 6),
                                 Text('user@gmail.com  |  12345678'),
-                                Text('admin@gmail.com |  12345678'),
                               ],
                             ),
                           ),
@@ -174,6 +179,17 @@ class _PantallaLoginState extends State<PantallaLogin> {
 
     widget.onLoginExitoso();
   }
+
+  Future<void> _irARegistro() async {
+    final emailRegistrado = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+    );
+
+    if (!mounted || emailRegistrado == null) return;
+
+    _emailController.text = emailRegistrado;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Cuenta creada. Inicia sesión.')),
+    );
+  }
 }
-
-
